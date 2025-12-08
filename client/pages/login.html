@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofdIn - Professional Resume Checker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3a56d4;
+            --secondary: #6c757d;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #28a745;
+            --danger: #dc3545;
+            --border-radius: 8px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .brand-section {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .brand-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .brand-section p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .brand-section ul {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .brand-section li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-section i {
+            margin-right: 10px;
+            color: #e6e9ff;
+        }
+
+        .form-section {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+
+        .logo h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--secondary);
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .form-container {
+            position: relative;
+        }
+
+        .form {
+            display: none;
+        }
+
+        .form.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--secondary);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+
+        .remember-me input {
+            margin-right: 8px;
+        }
+
+        .forgot-password {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: #e0e0e0;
+        }
+
+        .divider span {
+            padding: 0 15px;
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
+
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .social-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #f5f5f5;
+            color: var(--secondary);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            background-color: #e9e9e9;
+            transform: translateY(-2px);
+        }
+
+        .signup-text {
+            text-align: center;
+            margin-top: 25px;
+            color: var(--secondary);
+        }
+
+        .signup-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-text a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .brand-section {
+                padding: 30px 20px;
+            }
+
+            .form-section {
+                padding: 30px 20px;
+            }
+        }
+
+        /* Optional subtle style for org group */
+        .org-group label + input {
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand-section">
+            <h1>ProofdIn</h1>
+            <p>Elevate your career with our professional resume analysis tool</p>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> AI-powered resume analysis</li>
+                <li><i class="fas fa-check-circle"></i> Industry-specific recommendations</li>
+                <li><i class="fas fa-check-circle"></i> ATS compatibility scoring</li>
+                <li><i class="fas fa-check-circle"></i> Professional formatting tips</li>
+                <li><i class="fas fa-check-circle"></i> Keyword optimization</li>
+            </ul>
+        </div>
+        <div class="form-section">
+            <div class="logo">
+                <i class="fas fa-file-alt"></i>
+                <h2>ProofdIn</h2>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Login</div>
+                <div class="tab" data-tab="signup">Sign Up</div>
+            </div>
+
+            <div class="form-container">
+                <!-- LOGIN FORM -->
+                <form class="form active" id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <div class="password-container">
+                            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                            <span class="toggle-password" id="toggle-login-password">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="remember-forgot">
+                        <div class="remember-me">
+                            <input type="checkbox" id="remember-me">
+                            <label for="remember-me">Remember me</label>
+                        </div>
+                        <a href="#" class="forgot-password" id="forgot-password-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn">Login</button>
+
+                    <div class="divider">
+                        <span>Or continue with</span>
+                    </div>
+
+                    <div class="social-login">
+                        <a href="#" class="social-btn">
+                            <i class="fab fa-google"></i>
+                        </a>
+                        <a href="#" class="social-btn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="social-btn">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+
+                    <p class="signup-text">
+                        Don't have an account? <a href="#" id="switch-to-signup">Sign up</a>
+                    </p>
+                </form>
+
+                <!-- SIGNUP FORM -->
+                <form class="form" id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-name">Full Name</label>
+                        <input type="text" id="signup-name" class="form-control" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-email">Email Address</label>
+                        <input type="email" id="signup-email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+
+                    <!-- NEW: ROLE SELECTION -->
+                    <div class="form-group">
+                        <label for="signup-role">Role</label>
+                        <select id="signup-role" class="form-control" required>
+                            <option value="">Select your role</option>
+                            <option value="candidate">Candidate</option>
+                            <option value="recruiter">Recruiter</option>
+                        </select>
+                    </div>
+
+                    <!-- NEW: ORG DETAILS FOR RECRUITERS -->
+                    <div class="form-group org-group" id="org-details-group" style="display: none;">
+                        <label for="org-name">Organization Name (Recruiter)</label>
+                        <input type="text" id="org-name" class="form-control" placeholder="Enter your organization name">
+
+                        <label for="org-role" style="margin-top: 10px;">Job Title / Role</label>
+                        <input type="text" id="org-role" class="form-control" placeholder="e.g., Hiring Manager">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <div class="password-container">
+                            <input type="password" id="signup-password" class="form-control" placeholder="Create a password" required>
+                            <span class="toggle-password" id="toggle-signup-password">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <div class="password-container">
+                            <input type="password" id="confirm-password" class="form-control" placeholder="Confirm your password" required>
+                            <span class="toggle-password" id="toggle-confirm-password">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="remember-me">
+                            <input type="checkbox" id="terms" required>
+                            <label for="terms">
+                                I agree to the
+                                <a href="#" style="color: var(--primary);">Terms of Service</a>
+                                and
+                                <a href="#" style="color: var(--primary);">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">Create Account</button>
+
+                    <div class="divider">
+                        <span>Or continue with</span>
+                    </div>
+
+                    <div class="social-login">
+                        <a href="#" class="social-btn">
+                            <i class="fab fa-google"></i>
+                        </a>
+                        <a href="#" class="social-btn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="social-btn">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+
+                    <p class="signup-text">
+                        Already have an account? <a href="#" id="switch-to-login">Login</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:5000/api";
+    
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab');
+        const forms = document.querySelectorAll('.form');
+    
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+    
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+    
+                // Show corresponding form
+                forms.forEach(form => {
+                    form.classList.remove('active');
+                    if (form.id === `${tabId}-form`) {
+                        form.classList.add('active');
+                    }
+                });
+            });
+        });
+    
+        // Switch between login and signup
+        document.getElementById('switch-to-signup').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('.tab[data-tab="signup"]').click();
+        });
+    
+        document.getElementById('switch-to-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('.tab[data-tab="login"]').click();
+        });
+    
+        // Toggle password visibility
+        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+    
+        togglePasswordButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const input = button.previousElementSibling;
+                const icon = button.querySelector('i');
+    
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    
+        // Role selection & show/hide org fields
+        const roleSelect = document.getElementById('signup-role');
+        const orgGroup = document.getElementById('org-details-group');
+        const orgNameInput = document.getElementById('org-name');
+        const orgRoleInput = document.getElementById('org-role');
+    
+        if (roleSelect) {
+            roleSelect.addEventListener('change', () => {
+                const role = roleSelect.value;
+                if (role === 'recruiter') {
+                    orgGroup.style.display = 'block';
+                    orgNameInput.required = true;
+                    orgRoleInput.required = true;
+                } else {
+                    orgGroup.style.display = 'none';
+                    orgNameInput.required = false;
+                    orgRoleInput.required = false;
+                    orgNameInput.value = '';
+                    orgRoleInput.value = '';
+                }
+            });
+        }
+    
+        // Placeholder for "Forgot password?" flow
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Forgot password flow will redirect to a reset page in the MERN app.');
+            });
+        }
+    
+        // REAL LOGIN SUBMIT
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+    
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+    
+            if (!email || !password) {
+                alert('Please enter email and password.');
+                return;
+            }
+    
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+    
+                const data = await res.json();
+    
+                if (!res.ok) {
+                    alert(data.message || 'Login failed. Please check your credentials.');
+                    return;
+                }
+    
+                // save token + user
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+    
+                // redirect by role
+                if (data.user.role === 'candidate') {
+                    window.location.href = 'candidate.html';
+                } else if (data.user.role === 'recruiter') {
+                    window.location.href = 'recruiter.html';
+                } else {
+                    window.location.href = 'homepage.html';
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                alert('Network error. Please try again.');
+            }
+        });
+    
+        // REAL SIGNUP SUBMIT
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+    
+            const fullName = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const termsChecked = document.getElementById('terms').checked;
+    
+            const role = (roleSelect && roleSelect.value) || 'candidate';
+            const orgName = orgNameInput ? orgNameInput.value.trim() : '';
+            const orgRole = orgRoleInput ? orgRoleInput.value.trim() : '';
+    
+            if (!fullName || !email || !password) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+    
+            if (!termsChecked) {
+                alert('You must agree to the Terms & Conditions.');
+                return;
+            }
+    
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+    
+            if (role === 'recruiter' && (!orgName || !orgRole)) {
+                alert('Recruiters must provide organization name and job title.');
+                return;
+            }
+    
+            const payload = { fullName, email, password, role };
+            if (role === 'recruiter') {
+                payload.orgName = orgName;
+                payload.orgRole = orgRole;
+            }
+    
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+    
+                const data = await res.json();
+    
+                if (!res.ok) {
+                    alert(data.message || 'Signup failed.');
+                    return;
+                }
+    
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+    
+                alert('Signup successful! Redirecting to your dashboard...');
+    
+                if (data.user.role === 'candidate') {
+                    window.location.href = 'candidate.html';
+                } else if (data.user.role === 'recruiter') {
+                    window.location.href = 'recruiter.html';
+                } else {
+                    window.location.href = 'homepage.html';
+                }
+            } catch (err) {
+                console.error('Signup error:', err);
+                alert('Network error. Please try again.');
+            }
+        });
+    </script>
+    
+  
+
+</body>
+</html>

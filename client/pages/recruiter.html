@@ -775,48 +775,155 @@ Responsibilities:
     </div>
 
     <script>
-        // Sample candidate data
-        const candidates = [
-            {
-                id: 1,
-                name: "Nafisaa",
-                title: "Senior Frontend Engineer",
-                experience: "6 years",
-                matchScore: 95,
-                skills: ["React", "TypeScript", "Redux", "RTK", "Jest", "Cypress", "Webpack", "GraphQL"],
-                whyMatched: "Perfect match for React + TypeScript requirements with 6 years of experience. Strong proof of RTK usage in recent projects.",
-                proofLinks: [
-                    { icon: "fab fa-github", text: "GitHub PR #245" },
-                    { icon: "fas fa-chart-line", text: "Performance Report" },
-                    { icon: "fas fa-certificate", text: "React Certification" }
-                ],
-                lastUsedReact: 7,
-                lastUsedRTK: 14,
-                location: "Remote",
-                education: "MIT"
-            },
+        // Global Configuration
+        const API_BASE_URL = "http://localhost:5000/api";
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+        let currentJobId = null;
+        let candidates = [];
+    
+        // ---------------------------------------------------------
+        // 1. AUTHENTICATION & DASHBOARD INITIALIZATION
+        // ---------------------------------------------------------
+        (function initDashboard() {
+            const userStr = localStorage.getItem('user');
+    
+            // Check if logged in
+            if (!token || !userStr) {
+                window.location.href = 'login.html';
+                return;
+            }
+    
+            try {
+                currentUser = JSON.parse(userStr);
+            } catch (e) {
+                console.error("Error parsing user data", e);
+                logout();
+                return;
+            }
+    
+            // Security Check: Role-based access
+            if (currentUser.role !== 'recruiter') {
+                alert("Access Denied: This dashboard is for Recruiters only.");
+                window.location.href = 'login.html';
+                return;
+            }
+    
+            // Render User Info in Header
+            const nameEl = document.getElementById('recruiter-name');
+            const orgEl = document.getElementById('recruiter-org');
+            const avatarEl = document.getElementById('recruiter-avatar');
+    
+            if (nameEl) nameEl.textContent = currentUser.fullName || 'Recruiter';
             
-            {
-                id: 2,
-                name: "Arzoo",
-                title: "UI Engineer",
-                experience: "3 years",
-                matchScore: 76,
-                skills: ["React", "JavaScript", "Redux", "Testing Library", "Vite"],
-                whyMatched: "Strong modern tooling experience with Vite and Testing Library. Recent focus on performance optimization.",
-                proofLinks: [
-                    { icon: "fab fa-github", text: "Vite Plugin" },
-                    { icon: "fas fa-chart-line", text: "Optimization Results" }
-                ],
-                lastUsedReact: 30,
-                lastUsedRTK: 30,
-                location: "London, UK",
-                education: "Oxford"
-            },
+            if (orgEl) {
+                // Display Org Name, or Org Role, or fallback
+                orgEl.textContent = currentUser.orgName || currentUser.orgRole || 'Recruiter';
+            }
+    
+            if (avatarEl && currentUser.fullName) {
+                const initials = currentUser.fullName
+                    .split(/\s+/)
+                    .map(n => n[0]?.toUpperCase())
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('');
+                avatarEl.textContent = initials || 'R';
+            }
+    
+            // Attach Logout Listener
+            const logoutBtn = document.getElementById('recruiter-logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+        })();
+    
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    
+    
+        // ---------------------------------------------------------
+        // 2. JOB ANALYSIS (Connects to Backend)
+        // ---------------------------------------------------------
+        async function analyzeJobPost() {
+            const jobText = document.getElementById('jobDescription').value;
+            const analyzeBtn = document.querySelector('.job-input .btn'); // The button inside job-input div
+            const skillsContainer = document.getElementById('skillsList');
+    
+            // Validation
+            if (!jobText.trim()) {
+                alert('Please paste a job description first.');
+                return;
+            }
             
-        ];
+            // UI Loading State
+            const originalBtnText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            analyzeBtn.disabled = true;
+            
+            try {
+                // --- THE REAL API CALL ---
+                const response = await fetch(`${API_BASE_URL}/jobs/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token // Send JWT for authentication
+                    },
+                    body: JSON.stringify({ description: jobText })
+                });
+    
+                const data = await response.json();
+    
+                if (!response.ok) {
+                    throw new Error(data.message || 'Analysis failed');
+                }
+                // store jobId for matching
+                if (data.jobId) {
+                    currentJobId = data.jobId;
+                }
 
-        // Function to render candidates
+    
+                // Success!
+                alert(`Job Analyzed Successfully! Found ${data.skills.length} skills.`);
+    
+                // Clear existing static tags
+                skillsContainer.innerHTML = '';
+    
+                // Render new tags from Backend
+                if (data.skills.length === 0) {
+                    skillsContainer.innerHTML = '<span style="color: #777; font-style: italic;">No specific skills matched our dictionary.</span>';
+                } else {
+                    data.skills.forEach(skill => {
+                        const tag = document.createElement('div');
+                        tag.className = 'skill-tag';
+                        tag.innerHTML = `<i class="fas fa-check"></i> ${skill}`;
+                        skillsContainer.appendChild(tag);
+                    });
+                }
+    
+                // (Optional) Automatically trigger search (still using mock candidates for now)
+                // renderCandidates();
+    
+            } catch (error) {
+                console.error('Job Analysis Error:', error);
+                alert('Error analyzing job: ' + error.message);
+            } finally {
+                // Reset Button
+                analyzeBtn.innerHTML = originalBtnText;
+                analyzeBtn.disabled = false;
+            }
+        }
+    
+    
+        // ---------------------------------------------------------
+        // 3. CANDIDATE DISPLAY (Mock Data for Now)
+        // ---------------------------------------------------------
+        // We keep this Mock Data until we build the Candidate Model in the next step
+        
+    
         function renderCandidates() {
             const grid = document.getElementById('candidatesGrid');
             const biasToggle = document.getElementById('biasToggle').checked;
@@ -836,28 +943,25 @@ Responsibilities:
                 const recencyFilter = parseInt(document.getElementById('recencyFilter').value);
                 const scoreFilter = parseInt(document.getElementById('scoreFilter').value);
                 
-                // Check experience filter
+                // Filter Logic
+                const expYears = parseInt(candidate.experience);
+                
                 if (experienceFilter !== 'all') {
-                    const expYears = parseInt(candidate.experience);
                     if (experienceFilter === 'entry' && expYears > 2) return;
                     if (experienceFilter === 'mid' && (expYears < 3 || expYears > 5)) return;
                     if (experienceFilter === 'senior' && expYears < 5) return;
                     if (experienceFilter === 'lead' && expYears < 8) return;
                 }
                 
-                // Check location filter
                 if (locationFilter !== 'all') {
                     if (locationFilter === 'remote' && !candidate.location.toLowerCase().includes('remote')) return;
                     if (locationFilter === 'us' && !candidate.location.toLowerCase().includes('usa') && !candidate.location.toLowerCase().includes('united states')) return;
                 }
                 
-                // Check recency filter
                 if (recencyFilter !== 'all' && candidate.lastUsedReact > recencyFilter) return;
-                
-                // Check score filter
                 if (scoreFilter !== 'all' && candidate.matchScore < scoreFilter) return;
                 
-                // Get initials for anonymous display
+                // Bias Toggle Logic
                 const initials = biasToggle ? candidate.name.split(' ').map(n => n[0]).join('') : '';
                 
                 card.innerHTML = `
@@ -912,60 +1016,63 @@ Responsibilities:
             const count = grid.children.length;
             document.querySelector('.candidates-count').textContent = `Showing ${count} of ${candidates.length} candidates`;
         }
-
-        // Function to analyze job post
-        function analyzeJobPost() {
-            const jobText = document.getElementById('jobDescription').value;
-            const analyzeBtn = document.querySelector('.job-input .btn');
-            
-            // Show loading
-            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-            analyzeBtn.disabled = true;
-            
-            // Simulate analysis
-            setTimeout(() => {
-                analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Extract Skills';
-                analyzeBtn.disabled = false;
-                
-                // Show success
-                alert('Job post analyzed! 14 skills extracted. Starting candidate search...');
-                
-                // Trigger candidate search
-                renderCandidates();
-            }, 1500);
-        }
-
-        // Function to perform search
-        function performSearch() {
-            const searchText = document.getElementById('englishSearch').value;
-            if (!searchText.trim()) {
-                alert('Please enter a search query');
+    
+        // ---------------------------------------------------------
+        // 4. OTHER UI FUNCTIONS (Search, Filter, View)
+        // ---------------------------------------------------------
+    
+        async function performSearch() {
+            const searchText = document.getElementById('englishSearch').value.trim();
+        
+            if (!currentJobId) {
+                alert('Please analyze a job post first (Extract Skills) before searching for candidates.');
                 return;
             }
-            
-            // Show loading
+        
             const searchBtn = document.querySelector('.search-container .btn');
             const originalText = searchBtn.innerHTML;
             searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
             searchBtn.disabled = true;
-            
-            // Simulate search
-            setTimeout(() => {
+        
+            try {
+                const res = await fetch(`${API_BASE_URL}/jobs/match`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token,
+                    },
+                    body: JSON.stringify({
+                        jobId: currentJobId,
+                        query: searchText || null,
+                    }),
+                });
+        
+                const data = await res.json();
+        
+                if (!res.ok) {
+                    throw new Error(data.message || 'Match failed');
+                }
+        
+                candidates = data.candidates || [];
+                if (!candidates.length) {
+                    alert('No candidates matched this job yet.');
+                }
+        
+                renderCandidates();
+            } catch (err) {
+                console.error('Search error:', err);
+                alert('Error searching candidates: ' + err.message);
+            } finally {
                 searchBtn.innerHTML = originalText;
                 searchBtn.disabled = false;
-                
-                // Update results based on search
-                alert(`Searching for: "${searchText}"\nFound 24 matching candidates.`);
-                renderCandidates();
-            }, 1200);
+            }
         }
-
-        // Function to set search example
+        
+    
         function setSearchExample(element) {
             document.getElementById('englishSearch').value = element.textContent;
         }
-
-        // Function to reset filters
+    
         function resetFilters() {
             document.getElementById('experienceFilter').value = 'all';
             document.getElementById('locationFilter').value = 'all';
@@ -973,115 +1080,47 @@ Responsibilities:
             document.getElementById('scoreFilter').value = 'all';
             renderCandidates();
         }
-
-        // Function to view candidate profile
+    
         function viewCandidate(id) {
             const candidate = candidates.find(c => c.id === id);
-            alert(`Viewing profile for: ${candidate.name}\nTitle: ${candidate.title}\nExperience: ${candidate.experience}\nMatch Score: ${candidate.matchScore}%`);
+            alert(`Viewing profile for: ${candidate.name}\n(Details will be fetched from DB soon!)`);
         }
-
-        // Function to contact candidate
+    
         function contactCandidate(id) {
             const candidate = candidates.find(c => c.id === id);
-            alert(`Contact form opened for: ${candidate.name}\nYou can now send a message to this candidate.`);
+            alert(`Contact form opened for: ${candidate.name}`);
         }
-
-        // Initialize the page
+    
+        // ---------------------------------------------------------
+        // 5. EVENT LISTENERS
+        // ---------------------------------------------------------
         document.addEventListener('DOMContentLoaded', function() {
-            // Render initial candidates
-            renderCandidates();
             
-            // Add event listeners for filters
+            // Filter Listeners
             document.getElementById('experienceFilter').addEventListener('change', renderCandidates);
             document.getElementById('locationFilter').addEventListener('change', renderCandidates);
             document.getElementById('recencyFilter').addEventListener('change', renderCandidates);
             document.getElementById('scoreFilter').addEventListener('change', renderCandidates);
             
-            // Add event listener for bias toggle
+            // Bias Toggle Listener
             document.getElementById('biasToggle').addEventListener('change', renderCandidates);
             
-            // Add event listener for analyze job button
-            document.getElementById('analyzeJobBtn').addEventListener('click', analyzeJobPost);
+            // Button Listeners - IMPORTANT: Don't duplicate if HTML has onclick=""
+            // Best practice: If HTML has onclick="analyzeJobPost()", we don't need addEventListener here.
+            // But for safety, we ensure the button calls the function.
+            const analyzeBtn = document.getElementById('analyzeJobBtn');
+            if(analyzeBtn) {
+                // Remove any existing listeners by cloning (optional hack) or just rely on onclick in HTML
+                // We'll rely on the HTML onclick="analyzeJobPost()" you already have.
+            }
             
-            // Add enter key listener for search
+            // Search Enter Key
             document.getElementById('englishSearch').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     performSearch();
                 }
             });
         });
-
-                // ---------- AUTH / DASHBOARD LOGIC FOR RECRUITER ----------
-                (function () {
-                    const token = localStorage.getItem('token');
-                    const userStr = localStorage.getItem('user');
-        
-                    // If not logged in, go to login page
-                    if (!token || !userStr) {
-                        window.location.href = 'login.html';
-                        return;
-                    }
-        
-                    let user;
-                    try {
-                        user = JSON.parse(userStr);
-                    } catch (e) {
-                        console.error('Invalid user in localStorage');
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        window.location.href = 'login.html';
-                        return;
-                    }
-        
-                    // This page is only for recruiters
-                    if (user.role !== 'recruiter') {
-                        window.location.href = 'login.html';
-                        return;
-                    }
-        
-                    const nameEl = document.getElementById('recruiter-name');
-                    const orgEl = document.getElementById('recruiter-org');
-                    const avatarEl = document.getElementById('recruiter-avatar');
-        
-                    if (nameEl) nameEl.textContent = user.fullName || 'Recruiter';
-        
-                    if (orgEl) {
-                        if (user.orgName) {
-                            orgEl.textContent = user.orgName;
-                        } else if (user.orgRole) {
-                            orgEl.textContent = user.orgRole;
-                        } else {
-                            orgEl.textContent = 'Recruiter';
-                        }
-                    }
-        
-                    if (avatarEl && user.fullName) {
-                        const initials = user.fullName
-                            .split(/\s+/)
-                            .map(n => n[0]?.toUpperCase())
-                            .filter(Boolean)
-                            .slice(0, 2)
-                            .join('');
-                        avatarEl.textContent = initials || 'R';
-                    }
-        
-                    // Logout
-                    const logoutBtn = document.getElementById('recruiter-logout-btn');
-                    if (logoutBtn) {
-                        logoutBtn.addEventListener('click', () => {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('user');
-                            window.location.href = 'login.html';
-                        });
-                    }
-                })();
-        
-
-
-
-
-
-
     </script>
 </body>
 </html>

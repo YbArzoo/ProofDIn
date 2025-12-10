@@ -15,10 +15,16 @@ connectDB();
 
 // routes
 const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);   // <-- important
+const jobRoutes = require('./routes/jobRoutes');
+const candidateRoutes = require('./routes/candidateRoutes');   // 👈 NEW
 
-app.get("/", (req, res) => {
-  res.send("ProofDIn API is running...");
+app.use('/api/auth', authRoutes);
+// remove the duplicate /api/auth line
+app.use('/api/jobs', jobRoutes);
+app.use('/api/candidate', candidateRoutes);                    // 👈 NEW
+
+app.get('/', (req, res) => {
+  res.send('ProofDIn API is running...');
 });
 
 const PORT = process.env.PORT || 5000;

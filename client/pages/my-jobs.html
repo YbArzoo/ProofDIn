@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofdIn - My Job Posts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* KEEPING YOUR EXISTING CSS AS IS */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --primary: #4a6cf7; --primary-dark: #3a56d4; --primary-light: #eef2ff;
+            --secondary: #6c757d; --light: #f8f9fa; --dark: #212529;
+            --success: #28a745; --warning: #ffc107; --danger: #dc3545;
+            --border-radius: 10px; --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --transition: all 0.25s ease;
+        }
+        body { background: #f5f7fb; color: var(--dark); line-height: 1.6; }
+        .dashboard-header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+        .dashboard-nav { max-width: 1200px; margin: 0 auto; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; border-radius: 8px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); display: grid; place-items: center; color: #fff; font-size: 1.2rem; }
+        .logo-text { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .nav-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .btn { border: none; border-radius: var(--border-radius); padding: 0.6rem 1.4rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-size: 0.95rem; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-outline:hover { background: var(--primary-light); }
+        .btn-soft { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .btn-ghost { background: #fff; border: 1px solid #e3e6ee; color: var(--secondary); }
+        .btn-ghost:hover { color: var(--primary); border-color: var(--primary); }
+        .btn-danger { background: #fff; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        .page { max-width: 1200px; margin: 2rem auto; padding: 0 2rem 3rem; display: grid; gap: 1.5rem; }
+        .panel { background: #fff; border-radius: var(--border-radius); padding: 1.4rem; box-shadow: var(--box-shadow); }
+        .panel h3 { font-size: 1.1rem; margin-bottom: 0.9rem; display: flex; align-items: center; gap: 8px; color: var(--dark); }
+        .jobs { display: grid; gap: 1rem; }
+        .job-card { background: #fff; border-radius: var(--border-radius); padding: 1.2rem 1.3rem; box-shadow: var(--box-shadow); display: grid; gap: 0.9rem; border: 1px solid transparent; transition: var(--transition); cursor: pointer; position: relative;}
+        .job-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .job-top { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+        .company { display: flex; gap: 0.9rem; align-items: center; }
+        .avatar { width: 52px; height: 52px; border-radius: 14px; background: var(--primary-light); display: grid; place-items: center; color: var(--primary); font-weight: 800; }
+        .meta h4 { font-size: 1.15rem; margin-bottom: 0.2rem; }
+        .meta .subtitle { color: var(--secondary); font-weight: 600; }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag { background: #f4f6fb; color: var(--dark); padding: 0.45rem 0.7rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: 1px solid #e3e6ee; }
+        .job-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin-top: 1rem; }
+        .empty { text-align: center; padding: 2rem; color: var(--secondary); display: none; }
+
+        /* --- MODAL CSS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); padding: 2rem; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #fff; width: 100%; max-width: 800px; max-height: 90vh; border-radius: var(--border-radius); box-shadow: var(--box-shadow); overflow-y: auto; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid #e3e6ee; display: flex; justify-content: space-between; align-items: flex-start; position: sticky; top: 0; background: #fff; z-index: 10; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--secondary); cursor: pointer; padding: 0.5rem; }
+        .modal-close:hover { color: var(--danger); }
+        .modal-body { padding: 2rem; }
+        .full-description { white-space: pre-wrap; color: var(--dark); line-height: 1.8; margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <nav class="dashboard-nav">
+            <a class="logo" href="homepage.html">
+                <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+                <span class="logo-text">ProofdIn</span>
+            </a>
+            <div class="nav-actions">
+                <a class="btn btn-outline" href="job-portal.html">Public Portal</a>
+                <a class="btn btn-soft" href="recruiter.html">Dashboard</a>
+                <a class="btn btn-primary" href="post-job.html">Post a job</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="page">
+        <section class="panel" style="grid-column: 1 / -1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3><i class="fa-solid fa-briefcase"></i> My Posted Jobs</h3>
+                <a href="post-job.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Post New</a>
+            </div>
+            
+            <div class="jobs" id="jobList">
+                </div>
+            <div class="empty" id="emptyState">
+                <i class="fa-regular fa-folder-open" style="font-size:2rem;"></i>
+                <p>You haven't posted any jobs yet.</p>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="jobModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="company" id="modalCompanyHeader"></div>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="tags" id="modalSkills"></div>
+                <h3 style="margin: 1.5rem 0 1rem;"><i class="fa-solid fa-align-left"></i> Job Description</h3>
+                <div class="full-description" id="modalDescription"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:5000/api";
+        const jobList = document.getElementById('jobList');
+        const emptyState = document.getElementById('emptyState');
+        const jobModal = document.getElementById('jobModal');
+        let token;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            if (!token || !userStr || JSON.parse(userStr).role !== 'recruiter') {
+                alert("Unauthorized access.");
+                window.location.href = 'login.html';
+                return;
+            }
+            fetchMyJobs();
+        });
+
+        async function fetchMyJobs() {
+            try {
+                jobList.innerHTML = '<p style="padding:1rem;">Loading your jobs...</p>';
+                // CALLING THE NEW ENDPOINT
+                const res = await fetch(`${API_BASE_URL}/jobs/myjobs`, {
+                    headers: { 'x-auth-token': token }
+                });
+                const jobs = await res.json();
+                renderJobs(jobs);
+            } catch (err) {
+                console.error("Error fetching my jobs:", err);
+                jobList.innerHTML = "<p style='padding:1rem; color: var(--danger);'>Failed to load jobs.</p>";
+            }
+        }
+
+        function renderJobs(jobs) {
+            jobList.innerHTML = '';
+            if (!jobs || jobs.length === 0) {
+                emptyState.style.display = 'block'; return;
+            }
+            emptyState.style.display = 'none';
+
+            jobs.forEach(job => {
+                const orgName = (job.recruiter && job.recruiter.orgName) ? job.recruiter.orgName : "My Company";
+                const jobTitle = job.title || "Untitled Role";
+                const fullDesc = job.description || job.rawText || "";
+                const shortDesc = fullDesc.substring(0, 150) + "...";
+                const skillArray = job.skills || job.extractedSkills || [];
+                
+                const card = document.createElement('article');
+                card.className = 'job-card';
+                card.jobData = { ...job, orgName, fullDesc, skillArray, jobTitle };
+
+                // Clicking card opens modal
+                card.addEventListener('click', (e) => {
+                    // Don't open modal if clicking the delete button
+                    if (!e.target.closest('.btn-danger')) {
+                        openModal(card.jobData);
+                    }
+                });
+
+                const tagsHtml = skillArray.slice(0, 5).map(skill => `<span class="tag">${skill}</span>`).join('');
+                const datePosted = new Date(job.createdAt).toLocaleDateString();
+
+                card.innerHTML = `
+                    <div class="job-top">
+                        <div class="company">
+                            <div class="avatar">${orgName.substring(0,2).toUpperCase()}</div>
+                            <div class="meta">
+                                <h4>${jobTitle}</h4>
+                                <div class="subtitle">Posted on ${datePosted}</div> 
+                            </div>
+                        </div>
+                    </div>
+                    <p class="subtitle" style="margin-top: 10px;">${shortDesc}</p>
+                    <div class="tags">${tagsHtml}</div>
+                    <div class="job-actions">
+                        <button class="btn btn-ghost"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                        <button class="btn btn-danger" onclick="deleteJob('${job._id}', event)">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                jobList.appendChild(card);
+            });
+        }
+
+        async function deleteJob(jobId, event) {
+            event.stopPropagation(); // Stop card click event
+            if(!confirm("Are you sure you want to delete this job post? This cannot be undone.")) return;
+
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+                if(res.ok) {
+                    fetchMyJobs(); // Reload list
+                } else {
+                    const data = await res.json();
+                    alert(data.message || "Failed to delete job");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Server error during deletion.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Modal Logic (Same as job-portal.html)
+        function openModal(job) {
+            document.getElementById('modalCompanyHeader').innerHTML = `
+                <div class="avatar" style="width: 60px; height: 60px; font-size: 1.5rem;">${job.orgName.substring(0,2).toUpperCase()}</div>
+                <div class="meta">
+                    <h2 style="font-size: 1.5rem;">${job.jobTitle}</h2>
+                    <div class="subtitle" style="font-size: 1.1rem;">${job.orgName}</div>
+                </div>
+            `;
+            document.getElementById('modalSkills').innerHTML = job.skillArray.map(skill => `<span class="tag" style="font-size: 0.95rem; padding: 0.6rem 1rem;">${skill}</span>`).join('');
+            document.getElementById('modalDescription').textContent = job.fullDesc; 
+            jobModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            jobModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        jobModal.addEventListener('click', (e) => { if (e.target === jobModal) closeModal(); });
+    </script>
+</body>
+</html>

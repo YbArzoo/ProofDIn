@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const CandidateProfile = require("../models/CandidateProfile");
 const RecruiterProfile = require("../models/RecruiterProfile");
 
+// Helper function to create JWT
 const createToken = (user) => {
   return jwt.sign(
     { userId: user._id, role: user.role },
@@ -12,86 +14,94 @@ const createToken = (user) => {
   );
 };
 
-// POST /api/auth/signup
+// @desc    Register new user
+// @route   POST /api/auth/signup
 exports.signup = async (req, res) => {
+  const { fullName, email, password, role, orgName, orgRole } = req.body;
+
+  // 1. Basic Validation
+  if (!fullName || !email || !password || !role) {
+    return res.status(400).json({ message: 'Please fill in all required fields.' });
+  }
+
+  // 2. Recruiter Validation
+  if (role === 'recruiter') {
+    if (!orgName || !orgRole) {
+        return res.status(400).json({ message: 'Recruiters must provide Organization Name and Title.' });
+    }
+  }
+
   try {
-    const { fullName, email, password, role, orgName, orgRole } = req.body;
-
-    if (!fullName || !email || !password || !role) {
-      return res.status(400).json({ message: "Missing required fields" });
+    // 3. Check if user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists with this email.' });
     }
 
-    if (!["candidate", "recruiter"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
+    // 4. Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
-
-    const user = new User({
+    // 5. Create Base User
+    const user = await User.create({
       fullName,
       email,
-      role,
-      isEmailVerified: false,
+      passwordHash: hashedPassword, 
+      role
     });
 
-    // hash password
-    await user.setPassword(password);
-
-    // email verification token (we'll use later)
-    user.emailVerificationToken = crypto.randomBytes(32).toString("hex");
-    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-    await user.save();
-
-    // create related profile
-    if (role === "candidate") {
-      await CandidateProfile.create({ user: user._id });
-    } else if (role === "recruiter") {
-      if (!orgName || !orgRole) {
-        return res.status(400).json({
-          message: "Recruiter must provide organization name and job title",
-        });
-      }
-
+    // 6. Create Profiles (CRITICAL STEP)
+    if (role === 'recruiter') {
       await RecruiterProfile.create({
         user: user._id,
-        orgName,
-        orgRole,
+        orgName: orgName,
+        orgRole: orgRole,
+        orgWebsite: '', orgLocation: '', industry: '', orgSize: '', department: '', phone: '', bio: ''
+      });
+    } else if (role === 'candidate') {
+      // Create empty Candidate Profile to prevent 404s later
+      await CandidateProfile.create({
+        user: user._id,
+        headline: 'Aspiring Professional',
+        location: '',
+        education: [],
+        experience: [],
+        skills: [],
+        socialLinks: {}
       });
     }
 
-    const token = createToken(user);
-
-    // extra data for recruiter response
-    let extra = {};
-    if (role === "recruiter") {
-      extra.orgName = orgName;
-      extra.orgRole = orgRole;
+    // 7. Send Success Response (FIXED STRUCTURE)
+    if (user) {
+      res.status(201).json({
+        message: 'Signup successful',
+        token: createToken(user),
+        // We wrap this in a 'user' object so the frontend script (data.user.role) works
+        user: {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            role: user.role
+        }
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid user data received.' });
     }
 
-    return res.status(201).json({
-      message: "Signup successful",
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        ...extra,
-      },
-    });
-
-
-  } catch (err) {
-    console.error("Signup error:", err);
-    return res.status(500).json({ message: "Server error" });
+  } catch (error) {
+    console.error('Signup Error Details:', error);
+    
+    if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(val => val.message);
+        return res.status(400).json({ message: 'Database Error: ' + messages.join(', ') });
+    }
+    
+    res.status(500).json({ message: 'Server error during signup.' });
   }
 };
 
-// POST /api/auth/login
+// @desc    Login user
+// @route   POST /api/auth/login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -105,45 +115,41 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const valid = await user.validatePassword(password);
+    // Compare password using passwordHash
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    
     if (!valid) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    user.lastLoginAt = new Date();
-    await user.save();
+    if (user.lastLoginAt) {
+        user.lastLoginAt = new Date();
+        await user.save();
+    }
 
-        // extra info for recruiters
-        let extra = {};
-        if (user.role === "recruiter") {
-          const profile = await RecruiterProfile.findOne({ user: user._id }).lean();
-          if (profile) {
-            extra.orgName = profile.orgName;
-            extra.orgRole = profile.orgRole;
-          }
-        }
-    
-    
-    
-        const token = createToken(user);
+    // Get extra info for recruiters
+    let extra = {};
+    if (user.role === "recruiter") {
+      const profile = await RecruiterProfile.findOne({ user: user._id }).lean();
+      if (profile) {
+        extra.orgName = profile.orgName;
+        extra.orgRole = profile.orgRole;
+      }
+    }
 
-        return res.status(200).json({
-          message: "Login successful",
-          token,
-          user: {
-            id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            role: user.role,
-            ...extra,
-          },
-        });
-    
+    const token = createToken(user);
 
-
-
-
-
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        ...extra,
+      },
+    });
 
   } catch (err) {
     console.error("Login error:", err);

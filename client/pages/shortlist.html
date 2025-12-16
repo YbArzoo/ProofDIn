@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofdIn - Shortlisted Candidates</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- REUSING CORE STYLES FROM RECRUITER.HTML --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --primary: #4a6cf7; --primary-dark: #3a56d4; --primary-light: #eef2ff;
+            --secondary: #6c757d; --light: #f8f9fa; --dark: #212529;
+            --success: #28a745; --warning: #ffc107; --danger: #dc3545;
+            --border-radius: 8px; --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        body { background-color: #f5f7fb; color: var(--dark); line-height: 1.6; }
+
+        /* Sidebar & Header Layout */
+        .sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.05); padding: 1.5rem 1rem; z-index: 1100; }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+        .sidebar-logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .sidebar-logo-text { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .sidebar-nav { list-style: none; }
+        .sidebar-section-title { font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); margin-bottom: 0.5rem; }
+        .sidebar-nav-item { margin-bottom: 0.5rem; }
+        .sidebar-nav-link { display: flex; align-items: center; gap: 10px; padding: 0.7rem 1rem; border-radius: 8px; color: var(--dark); text-decoration: none; font-weight: 600; }
+        .sidebar-nav-link:hover, .sidebar-nav-link.active { background: var(--primary-light); color: var(--primary); }
+        
+        .dashboard-header { background: white; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 1000; margin-left: 260px; padding: 1rem 2rem; display: flex; justify-content: flex-end; }
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: grid; place-items: center; font-weight: 600; }
+        .btn { padding: 0.6rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; cursor: pointer; border: none; font-size: 1rem; transition: var(--transition); }
+        .btn-primary { background: var(--primary); color: white; }
+        
+        /* --- KANBAN BOARD STYLES --- */
+        .dashboard-container { max-width: 1400px; margin: 2rem auto; padding: 0 2rem; margin-left: 260px; }
+        
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 Columns */
+            gap: 1.5rem;
+            align-items: start;
+            overflow-x: auto;
+            padding-bottom: 2rem;
+        }
+
+        .kanban-column {
+            background: #eef2f6;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            min-height: 500px;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ddd;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .column-header .count {
+            background: #ddd;
+            color: #555;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+        }
+
+        /* Status Colors for Headers */
+        .col-saved .column-header { border-color: var(--secondary); color: var(--secondary); }
+        .col-interviewing .column-header { border-color: var(--primary); color: var(--primary); }
+        .col-offer .column-header { border-color: var(--success); color: var(--success); }
+        .col-rejected .column-header { border-color: var(--danger); color: var(--danger); }
+
+        /* Candidate Card in Kanban */
+        .kanban-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .kanban-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.2rem; color: var(--dark); }
+        .card-role { font-size: 0.85rem; color: var(--secondary); margin-bottom: 0.5rem; }
+        .card-job { font-size: 0.75rem; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 0.5rem;}
+
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .move-btn {
+            background: none;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .move-btn:hover { color: var(--primary); }
+        
+        .delete-btn:hover { color: var(--danger); }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon"><i class="fas fa-search-check"></i></div>
+            <div class="sidebar-logo-text">ProofdIn</div>
+        </div>
+        <nav class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="recruiter.html" class="sidebar-nav-link">
+                    <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="post-job.html" class="sidebar-nav-link">
+                    <i class="fas fa-briefcase"></i> <span>Post a Job</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="job-portal.html" class="sidebar-nav-link">
+                    <i class="fas fa-globe"></i> <span>Job Portal (Public)</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="shortlist.html" class="sidebar-nav-link active">
+                    <i class="fas fa-bookmark"></i> <span>Shortlisted</span>
+                </a>
+            </li>
+            <div class="sidebar-section-title" style="margin-top: 2rem;">Account</div>
+            <li class="sidebar-nav-item">
+                <a href="recruiter-profile.html" class="sidebar-nav-link">
+                    <i class="fas fa-user-circle"></i> <span>My Profile</span>
+                </a>
+            </li>
+        </nav>
+    </aside>
+
+    <header class="dashboard-header">
+        <div class="user-profile">
+            <div class="avatar" id="header-avatar">R</div>
+            <div>
+                <div id="header-name" style="font-weight: 600;">Recruiter</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <h1 style="margin-bottom: 1.5rem;">Candidate Pipeline</h1>
+        
+        <div class="kanban-board">
+            
+            <div class="kanban-column col-saved" id="col-saved">
+                <div class="column-header">
+                    <span>Saved</span>
+                    <span class="count" id="count-saved">0</span>
+                </div>
+                <div class="cards-container">
+                    </div>
+            </div>
+
+            <div class="kanban-column col-interviewing" id="col-interviewing">
+                <div class="column-header">
+                    <span>Interviewing</span>
+                    <span class="count" id="count-interviewing">0</span>
+                </div>
+                <div class="cards-container">
+                    </div>
+            </div>
+
+            <div class="kanban-column col-offer" id="col-offer">
+                <div class="column-header">
+                    <span>Offer Sent</span>
+                    <span class="count" id="count-offer">0</span>
+                </div>
+                <div class="cards-container">
+                    </div>
+            </div>
+
+            <div class="kanban-column col-rejected" id="col-rejected">
+                <div class="column-header">
+                    <span>Rejected</span>
+                    <span class="count" id="count-rejected">0</span>
+                </div>
+                <div class="cards-container">
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:5000/api";
+        const token = localStorage.getItem('token');
+
+        // --- AUTH CHECK ---
+        (function init() {
+            const userStr = localStorage.getItem('user');
+            if(!token || !userStr) window.location.href = 'login.html';
+            const user = JSON.parse(userStr);
+            document.getElementById('header-name').textContent = user.fullName || 'Recruiter';
+            document.getElementById('header-avatar').textContent = (user.fullName || 'R')[0].toUpperCase();
+            
+            fetchShortlist();
+        })();
+
+        // --- FETCH DATA ---
+        async function fetchShortlist() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/shortlist`, {
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                renderBoard(data);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load shortlist");
+            }
+        }
+
+        // --- RENDER BOARD ---
+        function renderBoard(items) {
+            // Clear all columns
+            ['saved', 'interviewing', 'offer', 'rejected'].forEach(status => {
+                const col = document.querySelector(`#col-${status} .cards-container`);
+                col.innerHTML = '';
+                document.getElementById(`count-${status}`).textContent = '0';
+            });
+
+            // Distribute items
+            items.forEach(item => {
+                const status = item.status || 'saved';
+                const col = document.querySelector(`#col-${status} .cards-container`);
+                
+                // Update count
+                const countBadge = document.getElementById(`count-${status}`);
+                countBadge.textContent = parseInt(countBadge.textContent) + 1;
+
+                // Create Card
+                const card = document.createElement('div');
+                card.className = 'kanban-card';
+                card.innerHTML = `
+                    <div class="card-title">${item.candidate.user.fullName}</div>
+                    <div class="card-role">${item.candidate.headline || 'Candidate'}</div>
+                    ${item.job ? `<div class="card-job"><i class="fas fa-briefcase"></i> ${item.job.title}</div>` : ''}
+                    
+                    <div class="card-actions">
+                        <select onchange="updateStatus('${item._id}', this.value)" style="padding: 2px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.8rem;">
+                            <option value="saved" ${status==='saved'?'selected':''}>Saved</option>
+                            <option value="interviewing" ${status==='interviewing'?'selected':''}>Interview</option>
+                            <option value="offer" ${status==='offer'?'selected':''}>Offer</option>
+                            <option value="rejected" ${status==='rejected'?'selected':''}>Reject</option>
+                        </select>
+                        <button class="move-btn delete-btn" onclick="deleteItem('${item._id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                col.appendChild(card);
+            });
+        }
+
+        // --- ACTIONS ---
+        async function updateStatus(id, newStatus) {
+            try {
+                await fetch(`${API_BASE_URL}/shortlist/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token 
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                fetchShortlist(); // Reload board
+            } catch (err) {
+                alert("Error updating status");
+            }
+        }
+
+        async function deleteItem(id) {
+            if(!confirm("Remove this candidate from your list?")) return;
+            try {
+                await fetch(`${API_BASE_URL}/shortlist/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+                fetchShortlist();
+            } catch (err) {
+                alert("Error removing item");
+            }
+        }
+    </script>
+</body>
+</html>

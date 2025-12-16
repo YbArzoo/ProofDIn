@@ -41,6 +41,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+            margin-left: 260px;
         }
 
         .dashboard-nav {
@@ -128,6 +129,7 @@
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
+            margin-left: 260px;
         }
 
         /* Job Post Section */
@@ -570,9 +572,141 @@
                 grid-template-columns: 1fr;
             }
         }
+        /* Sidebar Layout */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            padding: 1.5rem 1rem;
+            z-index: 1100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-logo-icon i {
+            color: white;
+        }
+
+        .sidebar-logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav-item {
+            margin-bottom: 0.5rem;
+            list-style: none;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .sidebar-nav-link:hover,
+        .sidebar-nav-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+                <i class="fas fa-search-check"></i>
+            </div>
+            <div class="sidebar-logo-text">ProofdIn</div>
+        </div>
+
+        <li class="sidebar-nav-item">
+            <a href="recruiter.html" class="sidebar-nav-link active">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+    
+        <li class="sidebar-nav-item">
+            <a href="post-job.html" class="sidebar-nav-link">
+                <i class="fas fa-briefcase"></i>
+                <span>Post a Job</span>
+            </a>
+        </li>
+    
+        <li class="sidebar-nav-item">
+            <a href="job-portal.html" class="sidebar-nav-link">
+                <i class="fas fa-globe"></i>
+                <span>Job Portal (Public)</span>
+            </a>
+        </li>
+        <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link" onclick="window.location.href='shortlist.html'">
+                <i class="fas fa-bookmark"></i>
+                <span>Shortlisted</span>
+            </a>
+        </li>
+        <div class="sidebar-section-title" style="margin-top: 2rem;">Account</div>
+
+            <li class="sidebar-nav-item">
+                <a href="my-jobs.html" class="sidebar-nav-link">
+                    <i class="fas fa-list-ul"></i>
+                    <span>My Posted Jobs</span>
+                </a>
+            </li>
+
+            <li class="sidebar-nav-item">
+                <a href="recruiter-profile.html" class="sidebar-nav-link">
+                    <i class="fas fa-user-circle"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+
+            <li class="sidebar-nav-item">
+                <a href="#" class="sidebar-nav-link" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </nav>
+    </aside>
+
     <!-- Dashboard Header -->
     <header class="dashboard-header">
         <nav class="dashboard-nav">
@@ -781,6 +915,7 @@ Responsibilities:
         let currentUser = null;
         let currentJobId = null;
         let candidates = [];
+        let myShortlist = []; // Store IDs of shortlisted candidates
     
         // ---------------------------------------------------------
         // 1. AUTHENTICATION & DASHBOARD INITIALIZATION
@@ -788,7 +923,6 @@ Responsibilities:
         (function initDashboard() {
             const userStr = localStorage.getItem('user');
     
-            // Check if logged in
             if (!token || !userStr) {
                 window.location.href = 'login.html';
                 return;
@@ -802,40 +936,21 @@ Responsibilities:
                 return;
             }
     
-            // Security Check: Role-based access
             if (currentUser.role !== 'recruiter') {
                 alert("Access Denied: This dashboard is for Recruiters only.");
                 window.location.href = 'login.html';
                 return;
             }
     
-            // Render User Info in Header
-            const nameEl = document.getElementById('recruiter-name');
-            const orgEl = document.getElementById('recruiter-org');
-            const avatarEl = document.getElementById('recruiter-avatar');
+            // Render User Info
+            document.getElementById('recruiter-name').textContent = currentUser.fullName || 'Recruiter';
+            document.getElementById('recruiter-org').textContent = currentUser.orgName || 'Recruiter';
+            document.getElementById('recruiter-avatar').textContent = (currentUser.fullName || 'R').charAt(0).toUpperCase();
     
-            if (nameEl) nameEl.textContent = currentUser.fullName || 'Recruiter';
+            document.getElementById('recruiter-logout-btn').addEventListener('click', logout);
             
-            if (orgEl) {
-                // Display Org Name, or Org Role, or fallback
-                orgEl.textContent = currentUser.orgName || currentUser.orgRole || 'Recruiter';
-            }
-    
-            if (avatarEl && currentUser.fullName) {
-                const initials = currentUser.fullName
-                    .split(/\s+/)
-                    .map(n => n[0]?.toUpperCase())
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .join('');
-                avatarEl.textContent = initials || 'R';
-            }
-    
-            // Attach Logout Listener
-            const logoutBtn = document.getElementById('recruiter-logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', logout);
-            }
+            // Initial Fetch of Shortlist (so we know who is already saved)
+            fetchShortlist();
         })();
     
         function logout() {
@@ -844,57 +959,96 @@ Responsibilities:
             window.location.href = 'login.html';
         }
     
+        // ---------------------------------------------------------
+        // 2. SHORTLIST LOGIC (NEW)
+        // ---------------------------------------------------------
+        async function fetchShortlist() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/shortlist`, {
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                // Store just the candidate IDs for easy checking
+                myShortlist = data.map(item => item.candidate._id);
+            } catch (err) {
+                console.error("Error fetching shortlist", err);
+            }
+        }
+    
+        async function saveCandidate(candidateId, btnElement) {
+            if (!candidateId) return;
+            
+            // UI Feedback
+            const originalHtml = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btnElement.disabled = true;
+    
+            try {
+                const res = await fetch(`${API_BASE_URL}/shortlist/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({
+                        candidateId: candidateId,
+                        jobId: currentJobId || null, // Link to current job if analyzed
+                        status: 'saved'
+                    })
+                });
+    
+                const data = await res.json();
+    
+                if (!res.ok) throw new Error(data.message || 'Error saving');
+    
+                // Success UI
+                btnElement.innerHTML = '<i class="fas fa-check"></i> Saved';
+                btnElement.classList.remove('btn-secondary');
+                btnElement.classList.add('btn-success'); // You might need to add .btn-success css
+                
+                // Refresh shortlist data
+                fetchShortlist();
+    
+            } catch (err) {
+                alert(err.message);
+                btnElement.innerHTML = originalHtml;
+                btnElement.disabled = false;
+            }
+        }
     
         // ---------------------------------------------------------
-        // 2. JOB ANALYSIS (Connects to Backend)
+        // 3. JOB ANALYSIS
         // ---------------------------------------------------------
         async function analyzeJobPost() {
             const jobText = document.getElementById('jobDescription').value;
-            const analyzeBtn = document.querySelector('.job-input .btn'); // The button inside job-input div
+            const analyzeBtn = document.querySelector('.job-input .btn');
             const skillsContainer = document.getElementById('skillsList');
     
-            // Validation
-            if (!jobText.trim()) {
-                alert('Please paste a job description first.');
-                return;
-            }
+            if (!jobText.trim()) return alert('Please paste a job description first.');
             
-            // UI Loading State
-            const originalBtnText = analyzeBtn.innerHTML;
             analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
             analyzeBtn.disabled = true;
             
             try {
-                // --- THE REAL API CALL ---
                 const response = await fetch(`${API_BASE_URL}/jobs/analyze`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-auth-token': token // Send JWT for authentication
+                        'x-auth-token': token
                     },
                     body: JSON.stringify({ description: jobText })
                 });
     
                 const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
     
-                if (!response.ok) {
-                    throw new Error(data.message || 'Analysis failed');
-                }
-                // store jobId for matching
-                if (data.jobId) {
-                    currentJobId = data.jobId;
-                }
-
+                if (data.jobId) currentJobId = data.jobId;
     
-                // Success!
-                alert(`Job Analyzed Successfully! Found ${data.skills.length} skills.`);
-    
-                // Clear existing static tags
+                alert(`Job Analyzed! Found ${data.skills.length} skills.`);
                 skillsContainer.innerHTML = '';
     
-                // Render new tags from Backend
                 if (data.skills.length === 0) {
-                    skillsContainer.innerHTML = '<span style="color: #777; font-style: italic;">No specific skills matched our dictionary.</span>';
+                    skillsContainer.innerHTML = '<span style="color: #777;">No specific skills matched.</span>';
                 } else {
                     data.skills.forEach(skill => {
                         const tag = document.createElement('div');
@@ -903,134 +1057,24 @@ Responsibilities:
                         skillsContainer.appendChild(tag);
                     });
                 }
-    
-                // (Optional) Automatically trigger search (still using mock candidates for now)
-                // renderCandidates();
-    
             } catch (error) {
-                console.error('Job Analysis Error:', error);
-                alert('Error analyzing job: ' + error.message);
+                console.error(error);
+                alert(error.message);
             } finally {
-                // Reset Button
-                analyzeBtn.innerHTML = originalBtnText;
+                analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Extract Skills';
                 analyzeBtn.disabled = false;
             }
         }
     
-    
         // ---------------------------------------------------------
-        // 3. CANDIDATE DISPLAY (Mock Data for Now)
+        // 4. CANDIDATE SEARCH & RENDER
         // ---------------------------------------------------------
-        // We keep this Mock Data until we build the Candidate Model in the next step
-        
-    
-        function renderCandidates() {
-            const grid = document.getElementById('candidatesGrid');
-            const biasToggle = document.getElementById('biasToggle').checked;
-            
-            grid.innerHTML = '';
-            
-            // Sort candidates by match score
-            const sortedCandidates = [...candidates].sort((a, b) => b.matchScore - a.matchScore);
-            
-            sortedCandidates.forEach((candidate, index) => {
-                const card = document.createElement('div');
-                card.className = 'candidate-card';
-                
-                // Apply filters
-                const experienceFilter = document.getElementById('experienceFilter').value;
-                const locationFilter = document.getElementById('locationFilter').value;
-                const recencyFilter = parseInt(document.getElementById('recencyFilter').value);
-                const scoreFilter = parseInt(document.getElementById('scoreFilter').value);
-                
-                // Filter Logic
-                const expYears = parseInt(candidate.experience);
-                
-                if (experienceFilter !== 'all') {
-                    if (experienceFilter === 'entry' && expYears > 2) return;
-                    if (experienceFilter === 'mid' && (expYears < 3 || expYears > 5)) return;
-                    if (experienceFilter === 'senior' && expYears < 5) return;
-                    if (experienceFilter === 'lead' && expYears < 8) return;
-                }
-                
-                if (locationFilter !== 'all') {
-                    if (locationFilter === 'remote' && !candidate.location.toLowerCase().includes('remote')) return;
-                    if (locationFilter === 'us' && !candidate.location.toLowerCase().includes('usa') && !candidate.location.toLowerCase().includes('united states')) return;
-                }
-                
-                if (recencyFilter !== 'all' && candidate.lastUsedReact > recencyFilter) return;
-                if (scoreFilter !== 'all' && candidate.matchScore < scoreFilter) return;
-                
-                // Bias Toggle Logic
-                const initials = biasToggle ? candidate.name.split(' ').map(n => n[0]).join('') : '';
-                
-                card.innerHTML = `
-                    <div class="candidate-rank">${index + 1}</div>
-                    <div class="candidate-header">
-                        <div class="candidate-anonymous">
-                            ${biasToggle ? initials : `<i class="fas fa-user"></i>`}
-                        </div>
-                        <div class="candidate-info">
-                            <div class="candidate-title">${biasToggle ? 'Candidate ' + candidate.id : candidate.name}</div>
-                            <div class="candidate-experience">${candidate.title} • ${candidate.experience} experience</div>
-                            <div class="match-score">${candidate.matchScore}% Match</div>
-                        </div>
-                    </div>
-                    
-                    <div class="why-matched">
-                        <div class="why-matched-title">
-                            <i class="fas fa-check-circle"></i> Why Matched
-                        </div>
-                        <div>${candidate.whyMatched}</div>
-                        <div class="matched-skills">
-                            ${candidate.skills.slice(0, 5).map(skill => `
-                                <span class="matched-skill">${skill}</span>
-                            `).join('')}
-                            ${candidate.skills.length > 5 ? `<span class="matched-skill">+${candidate.skills.length - 5} more</span>` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="proof-links">
-                        ${candidate.proofLinks.map(link => `
-                            <a href="#" class="proof-link">
-                                <i class="${link.icon}"></i>
-                                ${link.text}
-                            </a>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="candidate-actions">
-                        <button class="btn" style="background-color: #f0f0f0; padding: 0.5rem 1rem;" onclick="viewCandidate(${candidate.id})">
-                            <i class="fas fa-eye"></i> View Profile
-                        </button>
-                        <button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="contactCandidate(${candidate.id})">
-                            <i class="fas fa-envelope"></i> Contact
-                        </button>
-                    </div>
-                `;
-                
-                grid.appendChild(card);
-            });
-            
-            // Update count
-            const count = grid.children.length;
-            document.querySelector('.candidates-count').textContent = `Showing ${count} of ${candidates.length} candidates`;
-        }
-    
-        // ---------------------------------------------------------
-        // 4. OTHER UI FUNCTIONS (Search, Filter, View)
-        // ---------------------------------------------------------
-    
         async function performSearch() {
             const searchText = document.getElementById('englishSearch').value.trim();
-        
-            if (!currentJobId) {
-                alert('Please analyze a job post first (Extract Skills) before searching for candidates.');
-                return;
-            }
-        
             const searchBtn = document.querySelector('.search-container .btn');
-            const originalText = searchBtn.innerHTML;
+        
+            if (!currentJobId) return alert('Please analyze a job post first.');
+        
             searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
             searchBtn.disabled = true;
         
@@ -1041,85 +1085,136 @@ Responsibilities:
                         'Content-Type': 'application/json',
                         'x-auth-token': token,
                     },
-                    body: JSON.stringify({
-                        jobId: currentJobId,
-                        query: searchText || null,
-                    }),
+                    body: JSON.stringify({ jobId: currentJobId, query: searchText || null }),
                 });
         
                 const data = await res.json();
-        
-                if (!res.ok) {
-                    throw new Error(data.message || 'Match failed');
-                }
+                if (!res.ok) throw new Error(data.message);
         
                 candidates = data.candidates || [];
-                if (!candidates.length) {
-                    alert('No candidates matched this job yet.');
-                }
-        
                 renderCandidates();
             } catch (err) {
-                console.error('Search error:', err);
-                alert('Error searching candidates: ' + err.message);
+                console.error(err);
+                alert(err.message);
             } finally {
-                searchBtn.innerHTML = originalText;
+                searchBtn.innerHTML = '<i class="fas fa-search"></i> Search';
                 searchBtn.disabled = false;
             }
         }
-        
     
-        function setSearchExample(element) {
-            document.getElementById('englishSearch').value = element.textContent;
-        }
-    
-        function resetFilters() {
-            document.getElementById('experienceFilter').value = 'all';
-            document.getElementById('locationFilter').value = 'all';
-            document.getElementById('recencyFilter').value = 'all';
-            document.getElementById('scoreFilter').value = 'all';
-            renderCandidates();
-        }
-    
-        function viewCandidate(id) {
-            const candidate = candidates.find(c => c.id === id);
-            alert(`Viewing profile for: ${candidate.name}\n(Details will be fetched from DB soon!)`);
-        }
-    
-        function contactCandidate(id) {
-            const candidate = candidates.find(c => c.id === id);
-            alert(`Contact form opened for: ${candidate.name}`);
-        }
-    
-        // ---------------------------------------------------------
-        // 5. EVENT LISTENERS
-        // ---------------------------------------------------------
-        document.addEventListener('DOMContentLoaded', function() {
+        function renderCandidates() {
+            const grid = document.getElementById('candidatesGrid');
+            const biasToggle = document.getElementById('biasToggle').checked;
             
-            // Filter Listeners
-            document.getElementById('experienceFilter').addEventListener('change', renderCandidates);
-            document.getElementById('locationFilter').addEventListener('change', renderCandidates);
-            document.getElementById('recencyFilter').addEventListener('change', renderCandidates);
-            document.getElementById('scoreFilter').addEventListener('change', renderCandidates);
-            
-            // Bias Toggle Listener
-            document.getElementById('biasToggle').addEventListener('change', renderCandidates);
-            
-            // Button Listeners - IMPORTANT: Don't duplicate if HTML has onclick=""
-            // Best practice: If HTML has onclick="analyzeJobPost()", we don't need addEventListener here.
-            // But for safety, we ensure the button calls the function.
-            const analyzeBtn = document.getElementById('analyzeJobBtn');
-            if(analyzeBtn) {
-                // Remove any existing listeners by cloning (optional hack) or just rely on onclick in HTML
-                // We'll rely on the HTML onclick="analyzeJobPost()" you already have.
+            grid.innerHTML = '';
+            if(candidates.length === 0) {
+                grid.innerHTML = '<p>No candidates found matching criteria.</p>';
+                return;
             }
             
-            // Search Enter Key
-            document.getElementById('englishSearch').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
+            candidates.forEach((candidate, index) => {
+                const card = document.createElement('div');
+                card.className = 'candidate-card';
+                
+                // Check if already saved
+                const isSaved = myShortlist.includes(candidate.id);
+                const saveBtnHtml = isSaved 
+                    ? `<button class="btn" style="padding: 0.5rem 1rem; color: green;" disabled><i class="fas fa-check"></i> Saved</button>`
+                    : `<button class="btn" style="padding: 0.5rem 1rem;" onclick="saveCandidate('${candidate.id}', this)"><i class="far fa-bookmark"></i> Save</button>`;
+    
+                const initials = biasToggle ? (candidate.name || 'C').substring(0, 2).toUpperCase() : '';
+                
+                card.innerHTML = `
+                    <div class="candidate-rank">${index + 1}</div>
+                    <div class="candidate-header">
+                        <div class="candidate-anonymous">
+                            ${biasToggle ? initials : `<i class="fas fa-user"></i>`}
+                        </div>
+                        <div class="candidate-info">
+                            <div class="candidate-title">${biasToggle ? 'Candidate ' + (index+1) : candidate.name}</div>
+                            <div class="candidate-experience">${candidate.title} • ${candidate.experience} experience</div>
+                            <div class="match-score">${candidate.matchScore}% Match</div>
+                        </div>
+                    </div>
+                    
+                    <div class="why-matched">
+                        <div class="why-matched-title"><i class="fas fa-check-circle"></i> Why Matched</div>
+                        <div>${candidate.whyMatched}</div>
+                        <div class="matched-skills">
+                            ${candidate.skills.slice(0, 5).map(s => `<span class="matched-skill">${s}</span>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="proof-links">
+                        ${candidate.proofLinks.map(l => `<a href="#" class="proof-link"><i class="${l.icon}"></i> ${l.text}</a>`).join('')}
+                    </div>
+                    
+                    <div class="candidate-actions">
+                        <button class="btn" style="background-color: #f0f0f0; padding: 0.5rem 1rem;" onclick="alert('Viewing profile...')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="contactCandidate('${candidate.id}')">
+                            <i class="fas fa-envelope"></i> Contact
+                        </button>
+                        ${saveBtnHtml}
+                    </div>
+                `;
+                grid.appendChild(card);
             });
+            
+            document.querySelector('.candidates-count').textContent = `Showing ${candidates.length} candidates`;
+        }
+
+        async function contactCandidate(candidateId) {
+            if (!candidateId) return;
+    
+            // 1. Get Message
+            const message = prompt("Enter your message for the candidate:", "We were impressed by your profile and would like to schedule an interview.");
+            if (!message) return; // User cancelled
+    
+            // 2. UI Feedback
+            alert("Sending email... please wait.");
+    
+            try {
+                const res = await fetch(`${API_BASE_URL}/shortlist/contact`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({
+                        candidateId: candidateId,
+                        message: message
+                    })
+                });
+    
+                const data = await res.json();
+    
+                if (!res.ok) throw new Error(data.message || 'Error sending email');
+    
+                // 3. Success! Open the "Fake" Inbox to prove it works
+                if (data.previewUrl) {
+                    const openLink = confirm("Email Sent! Status updated to 'Interviewing'.\n\nDo you want to view the simulated email in Ethereal?");
+                    if (openLink) {
+                        window.open(data.previewUrl, '_blank');
+                    }
+                } else {
+                    alert("Email sent successfully!");
+                }
+    
+            } catch (err) {
+                console.error(err);
+                alert("Failed to send email: " + err.message);
+            }
+        }
+    
+        // Initialize listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('biasToggle').addEventListener('change', renderCandidates);
+            
+            // Add listener for Shortlist Sidebar Item
+            // You can add this logic later to open a modal showing the shortlist
+            // document.getElementById('view-shortlist-link').addEventListener('click', ...);
         });
     </script>
 </body>

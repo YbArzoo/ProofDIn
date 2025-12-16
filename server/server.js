@@ -18,6 +18,12 @@ const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');   // 👈 NEW
 
+
+
+app.use('/api/recruiters', require('./routes/recruiterRoutes'));
+app.use('/api/shortlist', require('./routes/shortlistRoutes'));
+
+
 app.use('/api/auth', authRoutes);
 // remove the duplicate /api/auth line
 app.use('/api/jobs', jobRoutes);

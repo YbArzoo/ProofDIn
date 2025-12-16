@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofdIn - Post a Job</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3a56d4;
+            --primary-light: #eef2ff;
+            --secondary: #6c757d;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --border-radius: 8px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Header & Navigation */
+        .dashboard-header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .dashboard-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 8px;
+        }
+
+        .logo-icon i {
+            color: white;
+            font-size: 1.3rem;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--light);
+            color: var(--dark);
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Job Post Form Section */
+        .job-post-form-section {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-header i {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-row-three {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-help-text {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 0.3rem;
+        }
+
+        /* Skills Input Styling */
+        .skills-input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .skill-input-box {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+
+        .skill-input-box input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        .skill-input-box button {
+            padding: 0.8rem 1.2rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .skill-input-box button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Skills Tags Display */
+        .skills-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .skill-tag {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-tag i {
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .skill-tag i:hover {
+            color: var(--danger);
+        }
+
+        /* Section Divider */
+        .form-divider {
+            border-bottom: 2px solid var(--primary-light);
+            margin: 2rem 0;
+            padding-top: 2rem;
+        }
+
+        /* Job Type & Level Selection */
+        .selection-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .selection-option {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .selection-option input[type="radio"],
+        .selection-option input[type="checkbox"] {
+            display: none;
+        }
+
+        .selection-label {
+            display: block;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .selection-option input[type="radio"]:checked + .selection-label,
+        .selection-option input[type="checkbox"]:checked + .selection-label {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .selection-label:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(74, 108, 247, 0.1);
+        }
+
+        /* Location Input */
+        .location-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .form-actions .btn {
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-success i {
+            color: #155724;
+            font-size: 1.3rem;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-error i {
+            color: #721c24;
+            font-size: 1.3rem;
+        }
+
+        .alert-close {
+            margin-left: auto;
+            cursor: pointer;
+            font-size: 1.3rem;
+        }
+
+        /* Preview Section */
+        .job-preview {
+            background-color: #f9f9f9;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .preview-content {
+            background-color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .preview-field {
+            margin-bottom: 0.8rem;
+        }
+
+        .preview-field-label {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.85rem;
+        }
+
+        .preview-field-value {
+            color: var(--dark);
+            margin-top: 0.3rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .user-menu {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row-three {
+                grid-template-columns: 1fr;
+            }
+
+            .selection-group {
+                flex-direction: column;
+            }
+
+            .selection-option {
+                min-width: auto;
+            }
+
+            .location-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <nav class="dashboard-nav">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="logo-text">ProofdIn</div>
+            </div>
+            <div class="user-menu">
+                <div class="user-profile">
+                    <div class="avatar">R</div>
+                    <span>Recruiter</span>
+                </div>
+                <a href="recruiter.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Job Post Form -->
+        <div class="job-post-form-section">
+            <div class="section-header">
+                <i class="fas fa-briefcase"></i>
+                <h2 class="section-title">Post a New Job</h2>
+            </div>
+
+            <form id="jobPostForm">
+                <!-- Job Title and Role -->
+                <div class="form-group">
+                    <label for="jobTitle">Job Title *</label>
+                    <input type="text" id="jobTitle" name="jobTitle" placeholder="e.g., Senior Frontend Developer, Product Manager" required>
+                    <p class="form-help-text">Be specific about the role and experience level</p>
+                </div>
+
+                <!-- Job Type & Experience Level -->
+                <div class="form-group">
+                    <label>Job Type *</label>
+                    <div class="selection-group">
+                        <div class="selection-option">
+                            <input type="radio" id="fullTime" name="jobType" value="Full-Time" required>
+                            <label for="fullTime" class="selection-label">
+                                <i class="fas fa-clock"></i> Full-Time
+                            </label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="radio" id="partTime" name="jobType" value="Part-Time">
+                            <label for="partTime" class="selection-label">
+                                <i class="fas fa-hourglass-half"></i> Part-Time
+                            </label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="radio" id="contract" name="jobType" value="Contract">
+                            <label for="contract" class="selection-label">
+                                <i class="fas fa-file-contract"></i> Contract
+                            </label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="radio" id="freelance" name="jobType" value="Freelance">
+                            <label for="freelance" class="selection-label">
+                                <i class="fas fa-laptop-code"></i> Freelance
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Experience Level -->
+                <div class="form-group">
+                    <label for="experienceLevel">Required Experience Level *</label>
+                    <select id="experienceLevel" name="experienceLevel" required>
+                        <option value="">Select experience level</option>
+                        <option value="entry-level">Entry Level (0-2 years)</option>
+                        <option value="mid-level">Mid Level (3-5 years)</option>
+                        <option value="senior">Senior (5-8 years)</option>
+                        <option value="lead">Lead/Principal (8+ years)</option>
+                    </select>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <!-- Location -->
+                <div class="form-group">
+                    <label>Location *</label>
+                    <div class="selection-group">
+                        <div class="selection-option">
+                            <input type="radio" id="onSite" name="locationType" value="On-Site" required>
+                            <label for="onSite" class="selection-label">
+                                <i class="fas fa-map-marker-alt"></i> On-Site
+                            </label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="radio" id="hybrid" name="locationType" value="Hybrid">
+                            <label for="hybrid" class="selection-label">
+                                <i class="fas fa-code-branch"></i> Hybrid
+                            </label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="radio" id="remote" name="locationType" value="Remote">
+                            <label for="remote" class="selection-label">
+                                <i class="fas fa-globe"></i> Remote
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location Details -->
+                <div id="locationDetails">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City/Region *</label>
+                            <input type="text" id="city" name="city" placeholder="e.g., New York, San Francisco">
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country *</label>
+                            <input type="text" id="country" name="country" placeholder="e.g., United States, Canada">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <!-- Salary -->
+                <div class="form-group">
+                    <label>Salary Range (Optional)</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salaryMin">Minimum Salary</label>
+                            <input type="number" id="salaryMin" name="salaryMin" placeholder="e.g., 80000" step="1000">
+                        </div>
+                        <div class="form-group">
+                            <label for="salaryMax">Maximum Salary</label>
+                            <input type="number" id="salaryMax" name="salaryMax" placeholder="e.g., 150000" step="1000">
+                        </div>
+                    </div>
+                    <p class="form-help-text">Leave blank if salary is not public</p>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <!-- Job Description -->
+                <div class="form-group">
+                    <label for="jobDescription">Job Description *</label>
+                    <textarea id="jobDescription" name="jobDescription" placeholder="Provide a detailed job description including responsibilities, about your company, culture, etc." rows="6" required></textarea>
+                    <p class="form-help-text">Be thorough - this helps candidates understand the role better</p>
+                </div>
+
+                <!-- Required Skills -->
+                <div class="form-group">
+                    <label for="skillInput">Required Skills *</label>
+                    <div class="skill-input-box">
+                        <input type="text" id="skillInput" placeholder="Type a skill and press Add" autocomplete="off">
+                        <button type="button" onclick="addSkill()">Add Skill</button>
+                    </div>
+                    <div class="skills-tags" id="skillsList"></div>
+                    <p class="form-help-text">Add all required and nice-to-have skills for this position</p>
+                </div>
+
+                <!-- Nice to Have Skills -->
+                <div class="form-group">
+                    <label for="niceSkillInput">Nice-to-Have Skills (Optional)</label>
+                    <div class="skill-input-box">
+                        <input type="text" id="niceSkillInput" placeholder="Type optional skills" autocomplete="off">
+                        <button type="button" onclick="addNiceSkill()">Add Skill</button>
+                    </div>
+                    <div class="skills-tags" id="niceSkillsList"></div>
+                    <p class="form-help-text">Skills that are beneficial but not required</p>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <!-- Benefits & Perks -->
+                <div class="form-group">
+                    <label>Benefits & Perks</label>
+                    <div class="selection-group">
+                        <div class="selection-option">
+                            <input type="checkbox" id="healthInsurance" name="benefits" value="Health Insurance">
+                            <label for="healthInsurance" class="selection-label">Health Insurance</label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="checkbox" id="retirement" name="benefits" value="Retirement Plan">
+                            <label for="retirement" class="selection-label">Retirement Plan</label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="checkbox" id="flexibleHours" name="benefits" value="Flexible Hours">
+                            <label for="flexibleHours" class="selection-label">Flexible Hours</label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="checkbox" id="homeOffice" name="benefits" value="Home Office">
+                            <label for="homeOffice" class="selection-label">Home Office</label>
+                        </div>
+                    </div>
+                    <div class="selection-group">
+                        <div class="selection-option">
+                            <input type="checkbox" id="paidLeave" name="benefits" value="Paid Leave">
+                            <label for="paidLeave" class="selection-label">Paid Leave</label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="checkbox" id="training" name="benefits" value="Training & Development">
+                            <label for="training" class="selection-label">Training & Development</label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="checkbox" id="stockOptions" name="benefits" value="Stock Options">
+                            <label for="stockOptions" class="selection-label">Stock Options</label>
+                        </div>
+                        <div class="selection-option">
+                            <input type="checkbox" id="bonus" name="benefits" value="Performance Bonus">
+                            <label for="bonus" class="selection-label">Performance Bonus</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responsibilities Highlight -->
+                <div class="form-group">
+                    <label for="responsibilities">Key Responsibilities (Optional)</label>
+                    <textarea id="responsibilities" name="responsibilities" placeholder="Bullet-point list of main responsibilities" rows="4"></textarea>
+                    <p class="form-help-text">Use bullet points for better readability</p>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetJobForm()">Reset</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Post Job
+                    </button>
+                </div>
+            </form>
+
+            <!-- Job Preview -->
+            <div class="job-preview">
+                <div class="preview-title">
+                    <i class="fas fa-eye"></i> Job Preview
+                </div>
+                <div class="preview-content" id="jobPreview">
+                    <p style="color: var(--secondary); text-align: center;">Fill in the form to see a preview of your job posting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage for skills
+        let requiredSkills = [];
+        let niceSkills = [];
+
+        // Add Required Skill
+        function addSkill() {
+            const input = document.getElementById('skillInput');
+            const skill = input.value.trim();
+            
+            if (skill && !requiredSkills.includes(skill)) {
+                requiredSkills.push(skill);
+                input.value = '';
+                renderSkills();
+            }
+        }
+
+        // Add Nice-to-Have Skill
+        function addNiceSkill() {
+            const input = document.getElementById('niceSkillInput');
+            const skill = input.value.trim();
+            
+            if (skill && !niceSkills.includes(skill)) {
+                niceSkills.push(skill);
+                input.value = '';
+                renderSkills();
+            }
+        }
+
+        // Remove Skill
+        function removeSkill(skill, isNice = false) {
+            if (isNice) {
+                niceSkills = niceSkills.filter(s => s !== skill);
+            } else {
+                requiredSkills = requiredSkills.filter(s => s !== skill);
+            }
+            renderSkills();
+        }
+
+        // Render Skills
+        function renderSkills() {
+            const requiredList = document.getElementById('skillsList');
+            const niceList = document.getElementById('niceSkillsList');
+            
+            requiredList.innerHTML = requiredSkills.map(skill => `
+                <div class="skill-tag">
+                    <i class="fas fa-code"></i> ${skill}
+                    <i class="fas fa-times" onclick="removeSkill('${skill}', false)"></i>
+                </div>
+            `).join('');
+
+            niceList.innerHTML = niceSkills.map(skill => `
+                <div class="skill-tag">
+                    <i class="fas fa-star"></i> ${skill}
+                    <i class="fas fa-times" onclick="removeSkill('${skill}', true)"></i>
+                </div>
+            `).join('');
+        }
+
+        // Location Type Toggle
+        document.querySelectorAll('input[name="locationType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const locationDetails = document.getElementById('locationDetails');
+                if (this.value === 'Remote') {
+                    locationDetails.style.display = 'none';
+                } else {
+                    locationDetails.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle Skill Input Enter Key
+        document.getElementById('skillInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill();
+            }
+        });
+
+        document.getElementById('niceSkillInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addNiceSkill();
+            }
+        });
+
+        // Form Submission
+        // Form Submission
+        // --- REAL BACKEND SUBMISSION ---
+        document.getElementById('jobPostForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 1. Check Authentication
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showAlert('You must be logged in as a recruiter to post a job.', 'error');
+                return;
+            }
+
+            // 2. Validation
+            if (requiredSkills.length === 0) {
+                showAlert('Please add at least one required skill.', 'error');
+                return;
+            }
+
+            // 3. UI Loading State
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+            btn.disabled = true;
+
+            // 4. Gather Data
+            const jobTitle = document.getElementById('jobTitle').value;
+            const rawDescription = document.getElementById('jobDescription').value;
+            const salaryMin = document.getElementById('salaryMin').value;
+            const salaryMax = document.getElementById('salaryMax').value;
+            const locationType = document.querySelector('input[name="locationType"]:checked')?.value || 'Not Specified';
+            const city = document.getElementById('city').value;
+            const country = document.getElementById('country').value;
+            const jobType = document.querySelector('input[name="jobType"]:checked')?.value || 'Full-Time';
+            const responsibilities = document.getElementById('responsibilities').value;
+            const benefits = Array.from(document.querySelectorAll('input[name="benefits"]:checked')).map(cb => cb.value).join(', ');
+
+            // 5. Construct a Rich Description for the Backend
+            // We combine all fields into one text block so the backend "Analyzer" can read it all.
+            const combinedDescription = `
+${rawDescription}
+
+---
+**Role Details:**
+- **Title:** ${jobTitle}
+- **Type:** ${jobType}
+- **Location:** ${city}, ${country} (${locationType})
+- **Salary:** $${salaryMin} - $${salaryMax}
+
+**Responsibilities:**
+${responsibilities}
+
+**Benefits:**
+${benefits}
+
+**Required Skills:**
+${requiredSkills.join(', ')}
+
+**Nice-to-Have Skills:**
+${niceSkills.join(', ')}
+            `.trim();
+
+            try {
+                // 6. Send to Backend API
+                const response = await fetch('http://localhost:5000/api/jobs/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token // Send the JWT token
+                    },
+                    body: JSON.stringify({
+                        title: jobTitle,
+                        description: combinedDescription
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to post job');
+                }
+
+                // 7. Success Handling
+                showAlert('Job posted successfully! Redirecting to Job Portal...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'job-portal.html';
+                }, 1500);
+
+            } catch (err) {
+                console.error(err);
+                showAlert(err.message, 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Reset Form
+        function resetJobForm() {
+            document.getElementById('jobPostForm').reset();
+            requiredSkills = [];
+            niceSkills = [];
+            renderSkills();
+            updateJobPreview();
+            
+            // Reset location details visibility
+            document.getElementById('locationDetails').style.display = 'block';
+        }
+
+        // Update Job Preview
+        function updateJobPreview() {
+            const preview = document.getElementById('jobPreview');
+            const jobTitle = document.getElementById('jobTitle').value;
+            const jobDescription = document.getElementById('jobDescription').value;
+            const salaryMin = document.getElementById('salaryMin').value;
+            const salaryMax = document.getElementById('salaryMax').value;
+
+            if (!jobTitle) {
+                preview.innerHTML = '<p style="color: var(--secondary); text-align: center;">Fill in the form to see a preview of your job posting</p>';
+                return;
+            }
+
+            let previewHTML = `
+                <div class="preview-field">
+                    <div class="preview-field-label">JOB TITLE</div>
+                    <div class="preview-field-value" style="font-size: 1.3rem; font-weight: 600;">${jobTitle}</div>
+                </div>
+                <div style="margin-top: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #f0f0f0;"></div>
+            `;
+
+            if (salaryMin || salaryMax) {
+                previewHTML += `
+                    <div class="preview-field">
+                        <div class="preview-field-label">SALARY RANGE</div>
+                        <div class="preview-field-value">$${salaryMin || '0'} - $${salaryMax || '∞'}</div>
+                    </div>
+                `;
+            }
+
+            if (requiredSkills.length > 0) {
+                previewHTML += `
+                    <div class="preview-field">
+                        <div class="preview-field-label">REQUIRED SKILLS</div>
+                        <div class="preview-field-value">${requiredSkills.join(', ')}</div>
+                    </div>
+                `;
+            }
+
+            if (niceSkills.length > 0) {
+                previewHTML += `
+                    <div class="preview-field">
+                        <div class="preview-field-label">NICE-TO-HAVE SKILLS</div>
+                        <div class="preview-field-value">${niceSkills.join(', ')}</div>
+                    </div>
+                `;
+            }
+
+            if (jobDescription) {
+                previewHTML += `
+                    <div class="preview-field">
+                        <div class="preview-field-label">DESCRIPTION</div>
+                        <div class="preview-field-value">${jobDescription.substring(0, 200)}${jobDescription.length > 200 ? '...' : ''}</div>
+                    </div>
+                `;
+            }
+
+            preview.innerHTML = previewHTML;
+        }
+
+        // Update preview on form change
+        document.getElementById('jobPostForm').addEventListener('input', updateJobPreview);
+        document.getElementById('jobPostForm').addEventListener('change', updateJobPreview);
+
+        // Alert Function
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertElement = document.createElement('div');
+            alertElement.className = `alert alert-${type}`;
+            alertElement.id = alertId;
+            alertElement.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+                <i class="fas fa-times alert-close" onclick="closeAlert('${alertId}')"></i>
+            `;
+            
+            alertContainer.appendChild(alertElement);
+            
+            // Auto-close after 5 seconds
+            setTimeout(() => closeAlert(alertId), 5000);
+        }
+
+        function closeAlert(alertId) {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                alertElement.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => alertElement.remove(), 300);
+            }
+        }
+
+        // Initialize
+        document.getElementById('locationDetails').style.display = 'block';
+    </script>
+</body>
+</html>

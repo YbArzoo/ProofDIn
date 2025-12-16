@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofdIn - Job Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* KEEPING YOUR EXISTING CSS AS IS */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --primary: #4a6cf7; --primary-dark: #3a56d4; --primary-light: #eef2ff;
+            --secondary: #6c757d; --light: #f8f9fa; --dark: #212529;
+            --success: #28a745; --warning: #ffc107; --danger: #dc3545;
+            --border-radius: 10px; --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --transition: all 0.25s ease;
+        }
+        body { background: #f5f7fb; color: var(--dark); line-height: 1.6; }
+        .dashboard-header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+        .dashboard-nav { max-width: 1200px; margin: 0 auto; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; border-radius: 8px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); display: grid; place-items: center; color: #fff; font-size: 1.2rem; }
+        .logo-text { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .nav-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .btn { border: none; border-radius: var(--border-radius); padding: 0.6rem 1.4rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-size: 0.95rem; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-outline:hover { background: var(--primary-light); }
+        .btn-soft { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .btn-ghost { background: #fff; border: 1px solid #e3e6ee; color: var(--secondary); }
+        .btn-ghost:hover { color: var(--primary); border-color: var(--primary); }
+        .page { max-width: 1200px; margin: 2rem auto; padding: 0 2rem 3rem; display: grid; gap: 1.5rem; }
+        .hero { background: #fff; border-radius: var(--border-radius); padding: 1.8rem; box-shadow: var(--box-shadow); display: grid; gap: 0.6rem; }
+        .hero h1 { font-size: 2.2rem; font-weight: 800; color: var(--dark); }
+        .hero p { color: var(--secondary); max-width: 800px; }
+        .hero-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .filters-shell { display: grid; grid-template-columns: 320px 1fr; gap: 1.2rem; align-items: start; }
+        .panel { background: #fff; border-radius: var(--border-radius); padding: 1.4rem; box-shadow: var(--box-shadow); }
+        .panel h3 { font-size: 1.1rem; margin-bottom: 0.9rem; display: flex; align-items: center; gap: 8px; color: var(--dark); }
+        .field { display: grid; gap: 0.35rem; margin-bottom: 1rem; }
+        .field label { font-weight: 700; font-size: 0.95rem; color: var(--dark); }
+        .input, select { width: 100%; padding: 0.75rem 0.9rem; border: 1px solid #e3e6ee; border-radius: var(--border-radius); font-size: 0.95rem; background: #fff; transition: var(--transition); }
+        .input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .chip-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+        .chip { padding: 0.45rem 0.85rem; border-radius: 999px; border: 1px solid #e3e6ee; background: #f7f8fc; color: var(--dark); font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .chip.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .toggle { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; color: var(--secondary); }
+        .toggle input { accent-color: var(--primary); width: 18px; height: 18px; }
+        .pill { display: inline-flex; align-items: center; gap: 8px; padding: 0.45rem 0.75rem; border-radius: 14px; background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 0.9rem; }
+        .jobs { display: grid; gap: 1rem; }
+        .job-card { background: #fff; border-radius: var(--border-radius); padding: 1.2rem 1.3rem; box-shadow: var(--box-shadow); display: grid; gap: 0.9rem; border: 1px solid transparent; transition: var(--transition); cursor: pointer; }
+        .job-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .job-top { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+        .company { display: flex; gap: 0.9rem; align-items: center; }
+        .avatar { width: 52px; height: 52px; border-radius: 14px; background: var(--primary-light); display: grid; place-items: center; color: var(--primary); font-weight: 800; }
+        .meta h4 { font-size: 1.15rem; margin-bottom: 0.2rem; }
+        .meta .subtitle { color: var(--secondary); font-weight: 600; }
+        .status { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .badge { padding: 0.35rem 0.7rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; background: #f1f3fb; color: var(--secondary); }
+        .badge.primary { background: var(--primary-light); color: var(--primary); }
+        .badge.success { background: #e6f6ed; color: var(--success); }
+        .badge.warning { background: #fff6e5; color: var(--warning); }
+        .job-details { display: flex; gap: 1rem; flex-wrap: wrap; color: var(--secondary); font-weight: 600; }
+        .job-details i { color: var(--primary); }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag { background: #f4f6fb; color: var(--dark); padding: 0.45rem 0.7rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: 1px solid #e3e6ee; }
+        .job-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+        .empty { text-align: center; padding: 2rem; color: var(--secondary); display: none; }
+        @media (max-width: 1024px) { .filters-shell { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .dashboard-nav { padding: 1rem; } .hero h1 { font-size: 1.8rem; } .job-top { flex-direction: column; align-items: flex-start; } .job-actions { justify-content: flex-start; } }
+
+        /* --- NEW CSS FOR MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px); padding: 2rem;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #fff; width: 100%; max-width: 800px; max-height: 90vh;
+            border-radius: var(--border-radius); box-shadow: var(--box-shadow);
+            overflow-y: auto; position: relative; animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid #e3e6ee; display: flex; justify-content: space-between; align-items: flex-start; position: sticky; top: 0; background: #fff; z-index: 10; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--secondary); cursor: pointer; padding: 0.5rem; transition: var(--transition); }
+        .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
+        .modal-body { padding: 2rem; }
+        .full-description { white-space: pre-wrap; color: var(--dark); line-height: 1.8; margin-top: 1.5rem; }
+        .modal-section-title { font-size: 1.1rem; font-weight: 700; margin: 1.5rem 0 1rem; color: var(--dark); display: flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <nav class="dashboard-nav">
+            <a class="logo" href="homepage.html">
+                <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+                <span class="logo-text">ProofdIn</span>
+            </a>
+            <div class="nav-actions">
+                <a class="btn btn-outline" href="homepage.html">Home</a>
+                <a id="navDashboard" class="btn btn-soft" href="#" style="display: none;">Dashboard</a>
+                <a id="navPostJob" class="btn btn-primary" href="post-job.html" style="display: none;">Post a job</a>
+                <a id="navLogin" class="btn btn-primary" href="login.html">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="page">
+        <section class="hero">
+            <h1>Find your next role</h1>
+            <p>Browse verified roles posted by recruiters. Filter by title, location, work style, and compensation to uncover the opportunities that fit you best.</p>
+        </section>
+
+        <section class="filters-shell">
+            <aside class="panel">
+                <h3><i class="fa-solid fa-filter"></i>Filters</h3>
+                <div class="field">
+                    <label for="search">Search by title or skill</label>
+                    <input class="input" id="search" type="text" placeholder="e.g. Product Manager, React">
+                </div>
+                 <div class="field" style="margin-top: 1rem;">
+                    <button class="btn btn-primary" style="width:100%" id="applyFilters">Apply Filters</button>
+                 </div>
+            </aside>
+
+            <section class="panel">
+                <h3><i class="fa-solid fa-briefcase"></i>Open roles</h3>
+                <div class="jobs" id="jobList">
+                    </div>
+                <div class="empty" id="emptyState">
+                    <i class="fa-regular fa-face-thinking" style="font-size:2rem;"></i>
+                    <p>No roles found. Try broadening your search.</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="jobModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="company" id="modalCompanyHeader">
+                    </div>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="tags" id="modalSkills">
+                    </div>
+                <h3 class="modal-section-title"><i class="fa-solid fa-align-left"></i> Job Description</h3>
+                <div class="full-description" id="modalDescription">
+                    </div>
+                <div class="job-actions" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e3e6ee; justify-content: flex-start;">
+                    <button class="btn btn-primary" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Apply Now</button>
+                    <button class="btn btn-ghost">Save Job</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:5000/api";
+        const jobList = document.getElementById('jobList');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('search');
+        const jobModal = document.getElementById('jobModal');
+
+        // Auth & Navigation Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user');
+            const navDashboard = document.getElementById('navDashboard');
+            const navPostJob = document.getElementById('navPostJob');
+            const navLogin = document.getElementById('navLogin');
+    
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                navLogin.style.display = 'none';
+                navDashboard.style.display = 'inline-block';
+                if (user.role === 'recruiter') {
+                    navDashboard.href = 'recruiter.html';
+                    navPostJob.style.display = 'inline-block';
+                } else {
+                    navDashboard.href = 'candidate.html';
+                }
+            } else {
+                navLogin.style.display = 'inline-block';
+            }
+            fetchJobs();
+        });
+
+        // Fetch Jobs
+        async function fetchJobs() {
+            try {
+                jobList.innerHTML = '<p style="padding:1rem;">Loading jobs...</p>';
+                const res = await fetch(`${API_BASE_URL}/jobs`);
+                const jobs = await res.json();
+                renderJobs(jobs);
+            } catch (err) {
+                console.error("Error fetching jobs:", err);
+                jobList.innerHTML = "<p style='padding:1rem; color: var(--danger);'>Failed to load jobs.</p>";
+            }
+        }
+
+        // Render Jobs
+        function renderJobs(jobs) {
+            jobList.innerHTML = '';
+            if (!jobs || jobs.length === 0) {
+                emptyState.style.display = 'block'; return;
+            }
+            emptyState.style.display = 'none';
+
+            jobs.forEach(job => {
+                const orgName = (job.recruiter && job.recruiter.orgName) ? job.recruiter.orgName : "Hiring Company";
+                const jobTitle = job.title || "Untitled Role";
+                // Use description (newer schema) or fallback to rawText (older schema)
+                const fullDesc = job.description || job.rawText || "No description available.";
+                const shortDesc = fullDesc.substring(0, 150) + "...";
+                // Use skills (newer schema) or fallback
+                const skillArray = job.skills || job.extractedSkills || [];
+                
+                const card = document.createElement('article');
+                card.className = 'job-card';
+                // Store full job data on the element for the modal
+                card.jobData = { ...job, orgName, fullDesc, skillArray, jobTitle }; 
+                card.onclick = () => openModal(card.jobData);
+
+                const tagsHtml = skillArray.slice(0, 5).map(skill => `<span class="tag">${skill}</span>`).join('') + (skillArray.length > 5 ? `<span class="tag">+${skillArray.length-5} more</span>` : '');
+
+                card.innerHTML = `
+                    <div class="job-top">
+                        <div class="company">
+                            <div class="avatar">${orgName.substring(0,2).toUpperCase()}</div>
+                            <div class="meta">
+                                <h4>${jobTitle}</h4>
+                                <div class="subtitle">${orgName}</div> 
+                            </div>
+                        </div>
+                    </div>
+                    <p class="subtitle" style="margin-top: 10px;">${shortDesc}</p>
+                    <div class="tags">${tagsHtml}</div>
+                `;
+                jobList.appendChild(card);
+            });
+        }
+
+        // Modal Logic
+        function openModal(job) {
+            document.getElementById('modalCompanyHeader').innerHTML = `
+                <div class="avatar" style="width: 60px; height: 60px; font-size: 1.5rem;">${job.orgName.substring(0,2).toUpperCase()}</div>
+                <div class="meta">
+                    <h2 style="font-size: 1.5rem;">${job.jobTitle}</h2>
+                    <div class="subtitle" style="font-size: 1.1rem;">${job.orgName}</div>
+                </div>
+            `;
+            document.getElementById('modalSkills').innerHTML = job.skillArray.map(skill => `<span class="tag" style="font-size: 0.95rem; padding: 0.6rem 1rem;">${skill}</span>`).join('');
+            // Use textContent for safety against XSS if description is plain text
+            document.getElementById('modalDescription').textContent = job.fullDesc; 
+            jobModal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeModal() {
+            jobModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside content
+        jobModal.addEventListener('click', (e) => {
+            if (e.target === jobModal) closeModal();
+        });
+
+        // Simple Search (Client-side for now)
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            const term = searchInput.value.toLowerCase();
+            const cards = Array.from(jobList.children);
+            let visible = 0;
+            cards.forEach(card => {
+                const text = (card.jobData.jobTitle + ' ' + card.jobData.skillArray.join(' ')).toLowerCase();
+                if(text.includes(term)) { card.style.display = 'grid'; visible++; } else { card.style.display = 'none'; }
+            });
+            emptyState.style.display = visible ? 'none' : 'block';
+        });
+    </script>
+</body>
+</html>

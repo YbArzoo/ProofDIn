@@ -640,8 +640,14 @@
                 <!-- Job Description -->
                 <div class="form-group">
                     <label for="jobDescription">Job Description *</label>
-                    <textarea id="jobDescription" name="jobDescription" placeholder="Provide a detailed job description including responsibilities, about your company, culture, etc." rows="6" required></textarea>
-                    <p class="form-help-text">Be thorough - this helps candidates understand the role better</p>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: flex-end;">
+                        <button type="button" class="btn btn-soft" onclick="autoFillForm()" style="font-size: 0.9rem; padding: 0.4rem 1rem;">
+                            <i class="fas fa-magic"></i> Auto-Fill Form from Text
+                        </button>
+                    </div>
+                
+                    <textarea id="jobDescription" name="jobDescription" ...></textarea>
                 </div>
 
                 <!-- Required Skills -->
@@ -738,294 +744,369 @@
     </div>
 
     <script>
-        // Storage for skills
-        let requiredSkills = [];
+        const API_BASE_URL = "http://localhost:5000/api";
+        const token = localStorage.getItem('token');
+        
+        // State
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+        const isEditMode = !!jobId;
+        let currentSkills = [];
         let niceSkills = [];
 
-        // Add Required Skill
+        // DOM Elements
+        const form = document.getElementById('jobPostForm');
+        const skillInput = document.getElementById('skillInput');
+        const skillsList = document.getElementById('skillsList');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!token) { window.location.href = 'login.html'; return; }
+
+            if (isEditMode) {
+                document.querySelector('.section-title').textContent = "Edit Job Post";
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Job';
+                await loadJobData();
+            }
+
+
+            // ... inside DOMContentLoaded ...
+
+            // Attach Listeners to ALL inputs
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+
+            // Initial Call (to show empty state or loaded data)
+            updatePreview();
+        });
+
+        // --- SKILL MANAGEMENT ---
         function addSkill() {
-            const input = document.getElementById('skillInput');
-            const skill = input.value.trim();
-            
-            if (skill && !requiredSkills.includes(skill)) {
-                requiredSkills.push(skill);
-                input.value = '';
+            const val = skillInput.value.trim();
+            if (val && !currentSkills.includes(val)) {
+                currentSkills.push(val);
                 renderSkills();
+                skillInput.value = '';
             }
         }
 
-        // Add Nice-to-Have Skill
-        function addNiceSkill() {
-            const input = document.getElementById('niceSkillInput');
-            const skill = input.value.trim();
-            
-            if (skill && !niceSkills.includes(skill)) {
-                niceSkills.push(skill);
-                input.value = '';
-                renderSkills();
-            }
-        }
-
-        // Remove Skill
-        function removeSkill(skill, isNice = false) {
-            if (isNice) {
-                niceSkills = niceSkills.filter(s => s !== skill);
-            } else {
-                requiredSkills = requiredSkills.filter(s => s !== skill);
-            }
+        function removeSkill(skill) {
+            currentSkills = currentSkills.filter(s => s !== skill);
             renderSkills();
         }
 
-        // Render Skills
         function renderSkills() {
-            const requiredList = document.getElementById('skillsList');
-            const niceList = document.getElementById('niceSkillsList');
-            
-            requiredList.innerHTML = requiredSkills.map(skill => `
+            skillsList.innerHTML = currentSkills.map(skill => `
                 <div class="skill-tag">
-                    <i class="fas fa-code"></i> ${skill}
-                    <i class="fas fa-times" onclick="removeSkill('${skill}', false)"></i>
+                    ${skill} <i class="fas fa-times" onclick="removeSkill('${skill}')"></i>
                 </div>
             `).join('');
 
-            niceList.innerHTML = niceSkills.map(skill => `
-                <div class="skill-tag">
-                    <i class="fas fa-star"></i> ${skill}
-                    <i class="fas fa-times" onclick="removeSkill('${skill}', true)"></i>
+            updatePreview();
+        }
+
+        // --- NICE SKILL MANAGEMENT ---
+        function addNiceSkill() {
+            const input = document.getElementById('niceSkillInput');
+            const val = input.value.trim();
+            if (val && !niceSkills.includes(val)) {
+                niceSkills.push(val);
+                renderNiceSkills();
+                input.value = '';
+            }
+        }
+
+        function removeNiceSkill(skill) {
+            niceSkills = niceSkills.filter(s => s !== skill);
+            renderNiceSkills();
+        }
+
+        function renderNiceSkills() {
+            const container = document.getElementById('niceSkillsList');
+            container.innerHTML = niceSkills.map(skill => `
+                <div class="skill-tag" style="background-color: #eef2f6; color: #555;">
+                    ${skill} <i class="fas fa-times" onclick="removeNiceSkill('${skill}')"></i>
                 </div>
             `).join('');
         }
 
-        // Location Type Toggle
-        document.querySelectorAll('input[name="locationType"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const locationDetails = document.getElementById('locationDetails');
-                if (this.value === 'Remote') {
-                    locationDetails.style.display = 'none';
-                } else {
-                    locationDetails.style.display = 'block';
-                }
-            });
-        });
-
-        // Handle Skill Input Enter Key
-        document.getElementById('skillInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addSkill();
-            }
-        });
-
-        document.getElementById('niceSkillInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addNiceSkill();
-            }
-        });
-
-        // Form Submission
-        // Form Submission
-        // --- REAL BACKEND SUBMISSION ---
-        document.getElementById('jobPostForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // 1. Check Authentication
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showAlert('You must be logged in as a recruiter to post a job.', 'error');
-                return;
-            }
-
-            // 2. Validation
-            if (requiredSkills.length === 0) {
-                showAlert('Please add at least one required skill.', 'error');
-                return;
-            }
-
-            // 3. UI Loading State
-            const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
-            btn.disabled = true;
-
-            // 4. Gather Data
-            const jobTitle = document.getElementById('jobTitle').value;
-            const rawDescription = document.getElementById('jobDescription').value;
-            const salaryMin = document.getElementById('salaryMin').value;
-            const salaryMax = document.getElementById('salaryMax').value;
-            const locationType = document.querySelector('input[name="locationType"]:checked')?.value || 'Not Specified';
-            const city = document.getElementById('city').value;
-            const country = document.getElementById('country').value;
-            const jobType = document.querySelector('input[name="jobType"]:checked')?.value || 'Full-Time';
-            const responsibilities = document.getElementById('responsibilities').value;
-            const benefits = Array.from(document.querySelectorAll('input[name="benefits"]:checked')).map(cb => cb.value).join(', ');
-
-            // 5. Construct a Rich Description for the Backend
-            // We combine all fields into one text block so the backend "Analyzer" can read it all.
-            const combinedDescription = `
-${rawDescription}
-
----
-**Role Details:**
-- **Title:** ${jobTitle}
-- **Type:** ${jobType}
-- **Location:** ${city}, ${country} (${locationType})
-- **Salary:** $${salaryMin} - $${salaryMax}
-
-**Responsibilities:**
-${responsibilities}
-
-**Benefits:**
-${benefits}
-
-**Required Skills:**
-${requiredSkills.join(', ')}
-
-**Nice-to-Have Skills:**
-${niceSkills.join(', ')}
-            `.trim();
-
+        // --- LOAD DATA (EDIT MODE) ---
+        async function loadJobData() {
             try {
-                // 6. Send to Backend API
-                const response = await fetch('http://localhost:5000/api/jobs/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-auth-token': token // Send the JWT token
-                    },
-                    body: JSON.stringify({
-                        title: jobTitle,
-                        description: combinedDescription
-                    })
+                const res = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+                    headers: { 'x-auth-token': token }
                 });
+                const job = await res.json();
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to post job');
+                // 1. Text Inputs
+                document.getElementById('jobTitle').value = job.title || '';
+                document.getElementById('jobDescription').value = job.description || '';
+                document.getElementById('responsibilities').value = job.responsibilities || '';
+                
+                // 2. Salary
+                if (job.salary) {
+                    document.getElementById('salaryMin').value = job.salary.min || '';
+                    document.getElementById('salaryMax').value = job.salary.max || '';
                 }
 
-                // 7. Success Handling
-                showAlert('Job posted successfully! Redirecting to Job Portal...', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'job-portal.html';
-                }, 1500);
+                // 3. Location (Split "City, Country")
+                if (job.location) {
+                    const parts = job.location.split(', ');
+                    document.getElementById('city').value = parts[0] || '';
+                    document.getElementById('country').value = parts[1] || '';
+                }
+
+                // 4. Dropdowns
+                if (job.experienceLevel) document.getElementById('experienceLevel').value = job.experienceLevel;
+
+                // 5. Radio Buttons (Job Type & Location Type)
+                if (job.jobType) {
+                    const radio = document.querySelector(`input[name="jobType"][value="${job.jobType}"]`);
+                    if (radio) radio.checked = true;
+                }
+                if (job.locationType) {
+                    const radio = document.querySelector(`input[name="locationType"][value="${job.locationType}"]`);
+                    if (radio) radio.checked = true;
+                }
+
+                // 6. Checkboxes (Benefits)
+                if (job.benefits && Array.isArray(job.benefits)) {
+                    job.benefits.forEach(benefit => {
+                        const cb = document.querySelector(`input[name="benefits"][value="${benefit}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                }
+
+                // 7. Skills
+                if (job.skills) {
+                    currentSkills = job.skills;
+                    renderSkills();
+                }
+
+                // 8. Nice Skills (NEW)
+                if (job.niceToHaveSkills) {
+                    niceSkills = job.niceToHaveSkills;
+                    renderNiceSkills();
+                }
 
             } catch (err) {
                 console.error(err);
-                showAlert(err.message, 'error');
+                alert("Failed to load job details.");
+            }
+        }
+        async function autoFillForm() {
+            const description = document.getElementById('jobDescription').value;
+            if (!description.trim() || description.length < 50) {
+                return alert("Please paste the full job description first!");
+            }
+    
+            const btn = document.querySelector('button[onclick="autoFillForm()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            btn.disabled = true;
+    
+            try {
+                const res = await fetch(`${API_BASE_URL}/jobs/parse-jd`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ description })
+                });
+    
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message);
+    
+                // --- POPULATE FORM ---
+                
+                // Text Fields
+                if(data.jobTitle) document.getElementById('jobTitle').value = data.jobTitle;
+                if(data.city) document.getElementById('city').value = data.city;
+                if(data.country) document.getElementById('country').value = data.country;
+                if(data.salaryMin) document.getElementById('salaryMin').value = data.salaryMin;
+                if(data.salaryMax) document.getElementById('salaryMax').value = data.salaryMax;
+                if(data.responsibilities) document.getElementById('responsibilities').value = data.responsibilities;
+    
+                // Dropdowns (Try to match values)
+                setDropdown('experienceLevel', data.experienceLevel);
+    
+                // Radio Buttons
+                setRadio('jobType', data.jobType);
+                setRadio('locationType', data.locationType);
+    
+                // Skills
+                if (data.skills && Array.isArray(data.skills)) {
+                    currentSkills = data.skills; // Update global array
+                    renderSkills();
+                }
+                // Nice to have skills
+                // Nice to have skills (NEW)
+                if (data.niceToHaveSkills && Array.isArray(data.niceToHaveSkills)) {
+                    niceSkills = data.niceToHaveSkills;
+                    renderNiceSkills();
+                }
+    
+                alert("Form auto-filled! Please review the details.");
+    
+            } catch (err) {
+                console.error(err);
+                alert("AI could not parse the text. Please fill manually.");
+            } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
+                updatePreview(); // <--- Add this line so the preview appears instantly after AI runs
+                alert("Form auto-filled!");
+            }
+        }
+    
+        // Helper to set dropdowns fuzzy-ish
+        function setDropdown(id, value) {
+            const select = document.getElementById(id);
+            if(!value || !select) return;
+            // Simple exact match first
+            select.value = value;
+            // If that failed, try lowercase match
+            if(!select.value) {
+                for(let opt of select.options) {
+                    if(opt.value.toLowerCase().includes(value.toLowerCase().split(' ')[0])) {
+                        select.value = opt.value;
+                        break;
+                    }
+                }
+            }
+        }
+    
+        // Helper for Radios
+        function setRadio(name, value) {
+            if(!value) return;
+            // Try to find exact value match, or contains match
+            const radios = document.getElementsByName(name);
+            for(let r of radios) {
+                if(r.value.toLowerCase() === value.toLowerCase() || value.toLowerCase().includes(r.value.toLowerCase())) {
+                    r.checked = true;
+                    break;
+                }
+            }
+        }
+
+        // --- REAL-TIME PREVIEW LOGIC ---
+        function updatePreview() {
+            // 1. Gather Values
+            const title = document.getElementById('jobTitle').value || "Job Title";
+            const type = document.querySelector('input[name="jobType"]:checked')?.value || "Type";
+            const location = document.querySelector('input[name="locationType"]:checked')?.value || "Location";
+            const city = document.getElementById('city').value;
+            const country = document.getElementById('country').value;
+            const fullLocation = (city || country) ? `${city}, ${country}` : "";
+            
+            const minSal = document.getElementById('salaryMin').value;
+            const maxSal = document.getElementById('salaryMax').value;
+            const salary = (minSal || maxSal) ? `$${minSal} - $${maxSal}` : "Not disclosed";
+            
+            const desc = document.getElementById('jobDescription').value || "No description provided.";
+            const responsibilities = document.getElementById('responsibilities').value;
+            
+            const benefits = Array.from(document.querySelectorAll('input[name="benefits"]:checked'))
+                                  .map(cb => `<span style="background:#eef2f6; padding:4px 8px; border-radius:4px; font-size:0.85rem; margin-right:5px;">${cb.value}</span>`)
+                                  .join('');
+
+            const skillsHtml = currentSkills.map(s => `<span class="tag" style="background:#f4f6fb; padding:4px 8px; border-radius:12px; border:1px solid #e3e6ee; font-size:0.8rem; margin-right:5px; font-weight:600;">${s}</span>`).join('');
+
+            // 2. Build HTML
+            const previewHtml = `
+                <div style="border-bottom:1px solid #eee; padding-bottom:1rem; margin-bottom:1rem;">
+                    <h2 style="margin:0; color:#333;">${title}</h2>
+                    <div style="color:#666; font-size:0.9rem; margin-top:5px;">
+                        ${type} • ${location} ${fullLocation ? `• ${fullLocation}` : ''}
+                    </div>
+                    <div style="margin-top:5px; font-weight:600; color:#28a745;">${salary}</div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <h4 style="margin-bottom:0.5rem; font-size:1rem;">Required Skills</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px;">${skillsHtml || '<span style="color:#999; font-style:italic;">No skills added yet</span>'}</div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <h4 style="margin-bottom:0.5rem; font-size:1rem;">Description</h4>
+                    <div style="white-space: pre-wrap; color:#555; font-size:0.95rem; line-height:1.6;">${desc}</div>
+                </div>
+
+                ${responsibilities ? `
+                <div style="margin-bottom:1rem;">
+                    <h4 style="margin-bottom:0.5rem; font-size:1rem;">Responsibilities</h4>
+                    <div style="white-space: pre-wrap; color:#555; font-size:0.95rem;">${responsibilities}</div>
+                </div>` : ''}
+
+                ${benefits ? `
+                <div style="margin-bottom:1rem;">
+                    <h4 style="margin-bottom:0.5rem; font-size:1rem;">Benefits</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px;">${benefits}</div>
+                </div>` : ''}
+            `;
+
+            // 3. Inject
+            document.getElementById('jobPreview').innerHTML = previewHtml;
+        }
+
+        // --- SUBMIT FORM ---
+        // --- SUBMIT FORM ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Gather Data
+            const formData = {
+                title: document.getElementById('jobTitle').value,
+                description: document.getElementById('jobDescription').value,
+                jobType: document.querySelector('input[name="jobType"]:checked')?.value,
+                experienceLevel: document.getElementById('experienceLevel').value,
+                locationType: document.querySelector('input[name="locationType"]:checked')?.value,
+                location: `${document.getElementById('city').value}, ${document.getElementById('country').value}`,
+                salaryMin: document.getElementById('salaryMin').value,
+                salaryMax: document.getElementById('salaryMax').value,
+                responsibilities: document.getElementById('responsibilities').value,
+                benefits: Array.from(document.querySelectorAll('input[name="benefits"]:checked')).map(cb => cb.value),
+                
+                manualSkills: currentSkills,   // Existing Required Skills
+                niceToHaveSkills: niceSkills   // <--- ADD THIS HERE (make sure 'niceSkills' array exists globally)
+            };
+
+            // ... rest of your submit logic ...
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            submitBtn.disabled = true;
+
+            try {
+                const url = isEditMode ? `${API_BASE_URL}/jobs/${jobId}` : `${API_BASE_URL}/jobs/analyze`;
+                const method = isEditMode ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Operation failed');
+
+                alert(isEditMode ? "Job Updated Successfully!" : "Job Posted Successfully!");
+                window.location.href = 'my-jobs.html';
+
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
-
-        // Reset Form
-        function resetJobForm() {
-            document.getElementById('jobPostForm').reset();
-            requiredSkills = [];
-            niceSkills = [];
-            renderSkills();
-            updateJobPreview();
-            
-            // Reset location details visibility
-            document.getElementById('locationDetails').style.display = 'block';
-        }
-
-        // Update Job Preview
-        function updateJobPreview() {
-            const preview = document.getElementById('jobPreview');
-            const jobTitle = document.getElementById('jobTitle').value;
-            const jobDescription = document.getElementById('jobDescription').value;
-            const salaryMin = document.getElementById('salaryMin').value;
-            const salaryMax = document.getElementById('salaryMax').value;
-
-            if (!jobTitle) {
-                preview.innerHTML = '<p style="color: var(--secondary); text-align: center;">Fill in the form to see a preview of your job posting</p>';
-                return;
-            }
-
-            let previewHTML = `
-                <div class="preview-field">
-                    <div class="preview-field-label">JOB TITLE</div>
-                    <div class="preview-field-value" style="font-size: 1.3rem; font-weight: 600;">${jobTitle}</div>
-                </div>
-                <div style="margin-top: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #f0f0f0;"></div>
-            `;
-
-            if (salaryMin || salaryMax) {
-                previewHTML += `
-                    <div class="preview-field">
-                        <div class="preview-field-label">SALARY RANGE</div>
-                        <div class="preview-field-value">$${salaryMin || '0'} - $${salaryMax || '∞'}</div>
-                    </div>
-                `;
-            }
-
-            if (requiredSkills.length > 0) {
-                previewHTML += `
-                    <div class="preview-field">
-                        <div class="preview-field-label">REQUIRED SKILLS</div>
-                        <div class="preview-field-value">${requiredSkills.join(', ')}</div>
-                    </div>
-                `;
-            }
-
-            if (niceSkills.length > 0) {
-                previewHTML += `
-                    <div class="preview-field">
-                        <div class="preview-field-label">NICE-TO-HAVE SKILLS</div>
-                        <div class="preview-field-value">${niceSkills.join(', ')}</div>
-                    </div>
-                `;
-            }
-
-            if (jobDescription) {
-                previewHTML += `
-                    <div class="preview-field">
-                        <div class="preview-field-label">DESCRIPTION</div>
-                        <div class="preview-field-value">${jobDescription.substring(0, 200)}${jobDescription.length > 200 ? '...' : ''}</div>
-                    </div>
-                `;
-            }
-
-            preview.innerHTML = previewHTML;
-        }
-
-        // Update preview on form change
-        document.getElementById('jobPostForm').addEventListener('input', updateJobPreview);
-        document.getElementById('jobPostForm').addEventListener('change', updateJobPreview);
-
-        // Alert Function
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById('alertContainer');
-            const alertId = 'alert-' + Date.now();
-            
-            const alertElement = document.createElement('div');
-            alertElement.className = `alert alert-${type}`;
-            alertElement.id = alertId;
-            alertElement.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                <span>${message}</span>
-                <i class="fas fa-times alert-close" onclick="closeAlert('${alertId}')"></i>
-            `;
-            
-            alertContainer.appendChild(alertElement);
-            
-            // Auto-close after 5 seconds
-            setTimeout(() => closeAlert(alertId), 5000);
-        }
-
-        function closeAlert(alertId) {
-            const alertElement = document.getElementById(alertId);
-            if (alertElement) {
-                alertElement.style.animation = 'slideIn 0.3s ease reverse';
-                setTimeout(() => alertElement.remove(), 300);
-            }
-        }
-
-        // Initialize
-        document.getElementById('locationDetails').style.display = 'block';
     </script>
 </body>
 </html>

@@ -1021,12 +1021,12 @@ Responsibilities:
         // ---------------------------------------------------------
         async function analyzeJobPost() {
             const jobText = document.getElementById('jobDescription').value;
-            const analyzeBtn = document.querySelector('.job-input .btn');
+            const analyzeBtn = document.getElementById('analyzeJobBtn') || document.querySelector('.job-input .btn');
             const skillsContainer = document.getElementById('skillsList');
     
             if (!jobText.trim()) return alert('Please paste a job description first.');
             
-            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing & Matching...';
             analyzeBtn.disabled = true;
             
             try {
@@ -1042,11 +1042,11 @@ Responsibilities:
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message);
     
+                // 1. Save the Job ID
                 if (data.jobId) currentJobId = data.jobId;
     
-                alert(`Job Analyzed! Found ${data.skills.length} skills.`);
+                // 2. Show Extracted Skills
                 skillsContainer.innerHTML = '';
-    
                 if (data.skills.length === 0) {
                     skillsContainer.innerHTML = '<span style="color: #777;">No specific skills matched.</span>';
                 } else {
@@ -1057,11 +1057,19 @@ Responsibilities:
                         skillsContainer.appendChild(tag);
                     });
                 }
+
+                // 3. AUTO-TRIGGER SEARCH (The Fix)
+                // This will use the new currentJobId to find matching candidates immediately
+                await performSearch(); 
+
+                // Scroll down to results so the user knows something happened
+                document.querySelector('.candidates-section').scrollIntoView({ behavior: 'smooth' });
+    
             } catch (error) {
                 console.error(error);
                 alert(error.message);
             } finally {
-                analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Extract Skills';
+                analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> Analyze Job Post';
                 analyzeBtn.disabled = false;
             }
         }

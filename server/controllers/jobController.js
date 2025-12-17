@@ -36,7 +36,8 @@ async function extractSkillsWithAI(text) {
 
     try {
         // Updated model to 1.5-flash (most stable for free tier)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Updated to your available model
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `
         You are a recruitment parser. Extract technical skills from this job description.
         Rules:
@@ -62,50 +63,54 @@ async function extractSkillsWithAI(text) {
 // --- CONTROLLERS ---
 
 exports.analyzeJob = async (req, res) => {
-  try {
-    const { description, title } = req.body;
-    const recruiterId = req.user.userId || req.user.id || req.user._id;
-
-    if (!recruiterId) return res.status(401).json({ message: 'Unauthorized' });
-    if (!description) return res.status(400).json({ message: 'Description required' });
-
-    // --- HYBRID LOGIC START ---
-    let skills = [];
-    let method = "AI";
-
-    // 1. Try AI first
-    skills = await extractSkillsWithAI(description);
-
-    // 2. If AI failed (empty array), use Regex Fallback
-    if (!skills || skills.length === 0) {
-        console.log("⚠️ AI failed or found nothing. Switching to Local Dictionary.");
-        skills = extractSkillsRegex(description);
-        method = "Local Regex";
+    try {
+      const { 
+          description, title, jobType, experienceLevel, 
+          locationType, location, salaryMin, salaryMax, 
+          benefits, responsibilities, manualSkills,
+          niceToHaveSkills // <--- 1. ADD THIS HERE
+      } = req.body;
+  
+      const recruiterId = req.user.userId || req.user.id || req.user._id;
+      if (!recruiterId) return res.status(401).json({ message: 'Unauthorized' });
+  
+      // 1. AI Extraction (Hybrid)
+      let aiSkills = await extractSkillsWithAI(description);
+      if (!aiSkills || aiSkills.length === 0) {
+          aiSkills = extractSkillsRegex(description);
+      }
+  
+      // Combine AI skills with manually entered skills (if any)
+      const finalSkills = Array.from(new Set([...aiSkills, ...(manualSkills || [])]));
+  
+      // 2. Create Job with ALL fields
+      const job = await Job.create({
+        recruiter: recruiterId,
+        title: title || 'Untitled Job',
+        description,
+        jobType,
+        experienceLevel,
+        locationType,
+        location,
+        salary: { min: salaryMin, max: salaryMax },
+        benefits,
+        responsibilities,
+        skills: finalSkills,
+        niceToHaveSkills: niceToHaveSkills, // <--- 2. ADD THIS HERE
+        rawText: description,
+        extractedSkills: finalSkills
+      });
+  
+      res.json({
+        message: 'Job posted successfully',
+        skills: finalSkills,
+        jobId: job._id
+      });
+  
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Server Error' });
     }
-    // --- HYBRID LOGIC END ---
-
-    console.log(`Extracted via ${method}:`, skills);
-
-    const job = await Job.create({
-      recruiter: recruiterId,
-      title: title || 'Untitled Job',
-      description: description,
-      skills: skills,
-      rawText: description,
-      extractedSkills: skills 
-    });
-
-    // Return 200 OK even if AI failed (because we used Regex)
-    res.json({
-      message: `Job analyzed successfully (${method})`,
-      skills,
-      jobId: job._id
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server Error' });
-  }
 };
 
 exports.matchCandidates = async (req, res) => {
@@ -190,9 +195,124 @@ exports.getMyJobs = async (req, res) => {
     } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
+// @desc    Delete a specific job
+// @route   DELETE /api/jobs/:id
 exports.deleteJob = async (req, res) => {
     try {
-        await Job.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Job deleted' });
-    } catch (err) { res.status(500).json({ message: 'Server error' }); }
+        const jobId = req.params.id;
+        const recruiterId = req.user.userId || req.user.id || req.user._id;
+
+        // 1. Check if Job Exists AND belongs to this recruiter
+        const job = await Job.findOne({ _id: jobId, recruiter: recruiterId });
+
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found or unauthorized' });
+        }
+
+        // 2. Delete
+        await Job.findByIdAndDelete(jobId);
+        
+        res.json({ message: 'Job deleted successfully' });
+
+    } catch (err) {
+        console.error('Error deleting job:', err);
+        res.status(500).json({ message: 'Server error deleting job' });
+    }
+};
+
+// @desc    Parse JD Text into Structured Data (AI)
+// @route   POST /api/jobs/parse-jd
+exports.parseJobDescription = async (req, res) => {
+    try {
+        const { description } = req.body;
+        if (!description) return res.status(400).json({ message: "Description required" });
+
+        // Check if AI is initialized (from the top of your file)
+        if (!genAI) {
+            return res.status(503).json({ message: "AI service unavailable" });
+        }
+
+        // Use standard model
+        // Updated to your available model
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        
+        const prompt = `
+        Analyze this job description and extract structured data.
+        Return ONLY a JSON object with these exact keys. If a field is not found, use null or empty string/array.
+        
+        Keys:
+        - jobTitle (string)
+        - jobType (string, enum: "Full-Time", "Part-Time", "Contract", "Freelance")
+        - experienceLevel (string, enum: "entry-level", "mid-level", "senior", "lead")
+        - locationType (string, enum: "On-Site", "Hybrid", "Remote")
+        - city (string)
+        - country (string)
+        - salaryMin (number, no currency symbols)
+        - salaryMax (number, no currency symbols)
+        - skills (array of strings, technical skills only)
+        - niceToHaveSkills (array of strings)
+        - benefits (array of strings, e.g. "Health Insurance", "Paid Leave")
+        - responsibilities (string, summary or bullet points)
+
+        Job Description:
+        "${description.substring(0, 3000)}"
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().trim();
+        
+        // Cleanup Markdown
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const parsedData = JSON.parse(text);
+        res.json(parsedData);
+
+    } catch (err) {
+        console.error("JD Parsing Error:", err);
+        // Fallback: If AI fails, return empty object so frontend doesn't crash
+        res.status(500).json({ message: "Failed to parse job description" });
+    }
+};
+
+// @desc    Get single job by ID
+// @route   GET /api/jobs/:id
+exports.getJob = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+        res.json(job);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update job details
+// @route   PUT /api/jobs/:id
+exports.updateJob = async (req, res) => {
+    try {
+        const updates = req.body; // Capture all sent fields
+        
+        // Map flat salary fields to object structure if present
+        if (updates.salaryMin || updates.salaryMax) {
+            updates.salary = { 
+                min: updates.salaryMin, 
+                max: updates.salaryMax 
+            };
+        }
+
+        const job = await Job.findOneAndUpdate(
+            { _id: req.params.id, recruiter: req.user.userId || req.user.id || req.user._id },
+            { $set: updates },
+            { new: true }
+        );
+
+        if (!job) return res.status(404).json({ message: 'Job not found or unauthorized' });
+        
+        res.json({ message: 'Job updated successfully', job });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 };

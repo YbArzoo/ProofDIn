@@ -1,36 +1,35 @@
-// server/models/Job.js
 const mongoose = require('mongoose');
 
-const shortlistSchema = new mongoose.Schema(
-  {
-    candidate: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'CandidateProfile',
-      required: true,
-    },
-    tag: {
-      type: String,
-      enum: ['interview', 'maybe', 'hold'],
-      default: 'maybe',
-    },
+const JobSchema = new mongoose.Schema({
+  recruiter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  { _id: false }
-);
-
-const jobSchema = new mongoose.Schema(
-  {
-    recruiter: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    title: { type: String },
-    description: { type: String, required: true },
-    skills: [String],              // skills extracted from JD
-    createdAt: { type: Date, default: Date.now },
-    shortlist: [shortlistSchema],  // recruiter’s shortlist per job
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  
+  // New Fields matching your HTML form
+  jobType: { type: String, default: 'Full-Time' }, // Full-Time, Contract, etc.
+  experienceLevel: { type: String, default: 'Mid Level' },
+  locationType: { type: String, default: 'Remote' }, // On-Site, Hybrid, Remote
+  location: { type: String }, // "City, Country"
+  salary: {
+    min: { type: Number },
+    max: { type: Number }
   },
-  { timestamps: true }
-);
+  benefits: [{ type: String }], // Array of strings
+  responsibilities: { type: String },
+  
+  // Skills
+  skills: [{ type: String }],
+  niceToHaveSkills: [{ type: String }], 
+  
+  // Legacy/Backup fields
+  rawText: { type: String },
+  extractedSkills: [{ type: String }],
+  
+  createdAt: { type: Date, default: Date.now }
+});
 
-module.exports = mongoose.model('Job', jobSchema);
+module.exports = mongoose.model('Job', JobSchema);

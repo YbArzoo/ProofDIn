@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProofdIn - Candidate Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -517,200 +521,16 @@
                 gap: 1rem;
             }
         }
-        /* Resume Preview Modal */
-
-        .resume-preview-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(2px);
+        #resume-content-display > :first-child {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
         }
 
-        .resume-preview-modal.hidden {
-            display: none;
+        #resume-content-display h1, 
+        #resume-content-display h2, 
+        #resume-content-display h3 {
+            margin-top: 0.5rem; 
         }
-
-        .resume-preview-content {
-            background: #ffffff;
-            padding: 2rem;
-            width: 700px;
-            max-width: 95vw;
-            max-height: 85vh;
-            overflow-y: auto;
-            border-radius: var(--border-radius);
-            box-shadow: 0 20px 60px rgba(15,23,42,0.35);
-            position: relative;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            border: none;
-            background-color: #f3f4f6;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close-btn i {
-            font-size: 0.9rem;
-            color: var(--secondary);
-        }
-
-        .resume-preview-body {
-            border: 1px solid #e5e7eb;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            background: #fafafa;
-            margin-top: 1.2rem;
-            font-size: 0.95rem;
-        }
-
-        .resume-section {
-            margin-top: 1rem;
-        }
-
-        .resume-section-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-        }
-    /* 2-column resume layout */
-        .resume-preview-body {
-            border: 1px solid #e5e7eb;
-            padding: 0;
-            border-radius: var(--border-radius);
-            background: #ffffff;
-            margin-top: 1.2rem;
-            font-size: 0.95rem;
-            overflow: hidden;
-        }
-
-        /* overall grid */
-        .resume-grid {
-            display: grid;
-            grid-template-columns: 0.9fr 1.6fr;
-            min-height: 400px;
-            margin: 0; /* important to avoid extra blank space */
-        }
-
-
-        /* left column */
-        .resume-left {
-            background: linear-gradient(180deg, #1f2937, #111827);
-            color: #e5e7eb;
-            padding: 1.5rem 1.3rem;
-        }
-
-        .resume-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.1rem;
-        }
-
-        .resume-title {
-            font-size: 0.9rem;
-            color: #9ca3af;
-            margin-bottom: 1.2rem;
-        }
-
-        .resume-contact {
-            font-size: 0.8rem;
-            margin-bottom: 1.3rem;
-        }
-
-        .resume-contact div {
-            margin-bottom: 0.2rem;
-        }
-
-        .resume-pill {
-            display: inline-flex;
-            padding: 0.15rem 0.55rem;
-            border-radius: 999px;
-            background: rgba(59, 130, 246, 0.15);
-            color: #dbeafe;
-            font-size: 0.75rem;
-            margin-right: 0.3rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .resume-left-section {
-            margin-top: 1.2rem;
-        }
-
-        .resume-left-section h3 {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #9ca3af;
-            margin-bottom: 0.4rem;
-        }
-
-        /* right column */
-        .resume-right {
-            padding: 1.5rem 1.6rem;
-            background: #f9fafb;
-        }
-
-        .resume-header-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .resume-header-line span {
-            font-size: 0.8rem;
-            color: #6b7280;
-        }
-
-        .resume-section {
-            margin-top: 1rem;
-        }
-
-        .resume-section-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-            color: #111827;
-        }
-
-        .resume-section p {
-            font-size: 0.9rem;
-            color: #4b5563;
-        }
-
-        .resume-section ul {
-            margin-left: 1.1rem;
-            margin-top: 0.3rem;
-            color: #4b5563;
-            font-size: 0.9rem;
-        }
-
-        .resume-section ul li + li {
-            margin-top: 0.2rem;
-        }
-
-        .jd-snippet {
-            font-size: 0.82rem;
-            color: #6b7280;
-            background: #f3f4f6;
-            padding: 0.6rem 0.7rem;
-            border-radius: 0.6rem;
-            white-space: pre-line;
-            border: 1px dashed #e5e7eb;
-        }
-
     </style>
 </head>
 <body>
@@ -794,26 +614,26 @@
                 
                 <div class="resume-tailor">
                     <div class="job-input">
-                        <textarea id="jobDescription" placeholder="Paste a job description here...">Senior Frontend Developer with 5+ years of experience in React, TypeScript, and modern JavaScript frameworks. Experience with state management (Redux, Context API), testing (Jest, Cypress), and CI/CD pipelines. Strong understanding of web performance optimization and responsive design.</textarea>
-                        <button class="btn btn-primary" onclick="generateResume()">
+                        <textarea id="jd-input" placeholder="Paste the job description here..." style="min-height: 200px;">Senior Frontend Developer with 5+ years of experience in React...</textarea>
+                        
+                        <button id="generate-btn" class="btn btn-primary" onclick="generateResume()">
                             <i class="fas fa-magic"></i> Generate Tailored Resume
                         </button>
                     </div>
                     
-                    <div class="tailored-resume-preview">
+                    <div id="success-card" class="tailored-resume-preview" style="display: none;">
                         <i class="fas fa-file-pdf"></i>
-                        <h3>Senior Frontend Developer.pdf</h3>
-                        <p>Tailored for: TechCorp Inc.</p>
-                        <p>Generated: Today, 10:30 AM</p>
+                        <h3 id="generated-filename">Tailored_Resume.pdf</h3>
+                        <p id="tailored-for">Tailored for: TechCorp Inc.</p>
+                        <p id="generated-date">Generated: Just now</p>
+                        
                         <div style="margin-top: 1rem; display: flex; gap: 1rem;">
-                            <button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="openResumePreview()">
+                            <button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="openPreviewModal()">
                                 <i class="fas fa-eye"></i> Preview
                             </button>
-
-                            <button class="btn btn-primary" onclick="downloadResumePDF()">
-                                <i class="fas fa-download"></i> Download PDF
+                            <button class="btn" style="padding: 0.5rem 1rem; background-color: #f0f0f0;" onclick="downloadPDF()">
+                                <i class="fas fa-download"></i> Download
                             </button>
-
                         </div>
                     </div>
                 </div>
@@ -829,16 +649,27 @@
                             <i class="fas fa-file-pdf"></i>
                             <p>React Developer.pdf</p>
                         </div>
-                        <div class="tailored-resume-preview" style="min-width: 200px;">
-                            <i class="fas fa-file-pdf"></i>
-                            <p>UI Engineer.pdf</p>
+                    </div>
+                </div>
+
+                <div id="preview-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+                    <div style="background: white; width: 80%; max-width: 800px; height: 85%; padding: 25px; border-radius: 8px; position: relative; display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                            <h3 style="margin: 0;">Resume Preview</h3>
+                            <button onclick="closePreviewModal()" style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+                        </div>
+
+                        <div id="resume-content-display" style="flex: 1; overflow-y: auto; font-family: 'Times New Roman', serif; padding: 20px; border: 1px solid #eee; background: #fff; color: #000; line-height: 1.5;">
+                            </div>
+
+                        <div style="margin-top: 15px; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+                            <button class="btn" style="background: #e0e0e0; color: #333;" onclick="closePreviewModal()">Close</button>
+                            <button class="btn btn-primary" onclick="downloadPDF()">Download PDF</button>
                         </div>
                     </div>
                 </div>
-                
-
             </section>
-
 
             <!-- Skills Grid Section -->
             <section id="skills-grid" class="section-card">
@@ -1114,258 +945,144 @@
             </section>
         </main>
     </div>
-        <!-- Tailored Resume Preview Modal -->
-    <div id="resumePreviewModal" class="resume-preview-modal hidden">
-        <div class="resume-preview-content">
-            <button class="close-btn" onclick="closeResumePreview()">
-                <i class="fas fa-times"></i>
-            </button>
-
-            <h2>Tailored Resume Preview</h2>
-
-            <!-- The generated preview will be inserted here -->
-            <div id="resumePreviewBody" class="resume-preview-body">
-                <!-- Filled dynamically -->
-            </div>
-
-            <div class="resume-preview-actions">
-                <button class="btn btn-primary">
-                    <i class="fas fa-download"></i> Download PDF
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- html2pdf library for downloading resume as PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
-                // Store last generated data for preview
-        let lastGeneratedJobTitle = 'Senior Frontend Developer';
-        let lastGeneratedJD = '';
-        let lastGeneratedTime = '';
+    // --- GLOBAL VARIABLES ---
+    const API_BASE_URL = "http://localhost:5000"; // <--- FORCE BACKEND URL
+    let generatedResumeHTML = ""; 
 
-        // Function to generate tailored resume
-        function generateResume() {
-            const jobDescription = document.getElementById('jobDescription').value;
-            if (!jobDescription.trim()) {
-                alert('Please paste a job description first.');
+    // --- MAIN FUNCTION ---
+    async function generateResume() {
+        console.log("🚀 Starting Resume Generation...");
+
+        // 1. Get Elements
+        const jdInput = document.getElementById('jd-input');
+        const btn = document.getElementById('generate-btn'); 
+
+        // 2. Validate Elements Exist
+        if (!jdInput || !btn) {
+            alert("Error: HTML elements not found. Check IDs 'jd-input' and 'generate-btn'.");
+            return;
+        }
+
+        // 3. Get Input Data
+        const jdText = jdInput.value;
+        const originalText = btn.innerHTML;
+
+        if (!jdText || jdText.trim().length < 20) {
+            alert('Please paste a valid job description (at least 20 characters).');
+            return;
+        }
+
+        // 4. Set Loading State
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        btn.disabled = true;
+
+        try {
+            // 5. Get Auth Token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("You are not logged in. Please log in again.");
+                window.location.href = 'login.html';
                 return;
             }
+
+            console.log(`🔗 Fetching: ${API_BASE_URL}/api/candidate/generate-resume`);
+
+            // 6. FORCE FETCH TO BACKEND
+            const response = await fetch(`${API_BASE_URL}/api/candidate/generate-resume`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token
+                },
+                body: JSON.stringify({ jobDescriptionText: jdText })
+            });
+
+            // 7. Check Response Status
+            console.log("📩 Response Status:", response.status);
             
-            // Show loading/processing
-            const button = document.querySelector('.job-input .btn');
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            button.disabled = true;
+            if (response.status === 404) {
+                throw new Error("Server Route Not Found (404). Check server.js routes.");
+            }
             
-            // Simulate processing
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.disabled = false;
+            const data = await response.json(); // <--- THIS FAILS IF HTML IS RETURNED
+
+            if (!response.ok) {
+                throw new Error(data.msg || 'Server Error');
+            }
+
+            // 8. Success: Process Data
+            generatedResumeHTML = marked.parse(data.resumeContent);
+
+            // 9. Update UI (Show Success Card)
+            const successCard = document.getElementById('success-card');
+            if (successCard) {
+                successCard.style.display = 'flex';
                 
-                // Save data for preview
-                const jobTitle = jobDescription.split(' ').slice(0, 3).join(' ');
-                lastGeneratedJobTitle = jobTitle || 'Tailored Role';
-                lastGeneratedJD = jobDescription;
-
+                // Update Timestamp
                 const now = new Date();
-                lastGeneratedTime = now.toLocaleString();
-
-                // Update small card title
-                const previewTitleEl = document.querySelector('.tailored-resume-preview h3');
-                if (previewTitleEl) {
-                    previewTitleEl.textContent = lastGeneratedJobTitle + '.pdf';
+                const dateEl = document.getElementById('generated-date');
+                if(dateEl) dateEl.textContent = `Generated: Today, ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                
+                // Update Company Name
+                const companyMatch = jdText.match(/(?:at|for|company)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/);
+                const tailorEl = document.getElementById('tailored-for');
+                if (companyMatch && tailorEl) {
+                    tailorEl.textContent = `Tailored for: ${companyMatch[1]}`;
                 }
+            }
 
-                alert('Tailored resume generated successfully! You can now click Preview to see it.');
-            }, 1500);
+            // Inject Content into Hidden Modal
+            const displayEl = document.getElementById('resume-content-display');
+            if(displayEl) displayEl.innerHTML = generatedResumeHTML;
+
+            // Final Success Alert
+            alert('✅ Tailored resume generated successfully!');
+
+        } catch (error) {
+            console.error("❌ ERROR:", error);
+            
+            // specific error handling for the "Unexpected token" issue
+            if (error.message.includes("Unexpected token")) {
+                alert("CRITICAL ERROR: The server returned HTML instead of JSON.\n\nThis means the Backend URL is wrong or the Route is missing.\n\nCheck Console for details.");
+            } else {
+                alert('Failed: ' + error.message);
+            }
+        } finally {
+            // Reset Button
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
-
-                        function openResumePreview() {
-            const modal = document.getElementById('resumePreviewModal');
-            const body = document.getElementById('resumePreviewBody');
-            if (!modal || !body) return;
-
-            // Use stored JD or current textarea as fallback
-            const jdText = (typeof lastGeneratedJD !== 'undefined' && lastGeneratedJD)
-                ? lastGeneratedJD
-                : (document.getElementById('jobDescription')?.value || '');
-
-            const safeTime = (typeof lastGeneratedTime !== 'undefined' && lastGeneratedTime)
-                ? lastGeneratedTime
-                : 'Just now (demo)';
-
-            const safeTitle = (typeof lastGeneratedJobTitle !== 'undefined' && lastGeneratedJobTitle)
-                ? lastGeneratedJobTitle
-                : 'Target Role';
-
-            body.innerHTML = `
-                <div class="resume-grid">
-                    <!-- LEFT COLUMN -->
-                    <div class="resume-left">
-                        <div class="resume-name">John Doe</div>
-                        <div class="resume-title">Frontend Engineer</div>
-                        
-                        <div class="resume-contact">
-                            <div>📍 Dhaka, Bangladesh</div>
-                            <div>✉️ john.doe@example.com</div>
-                            <div>🔗 linkedin.com/in/johndoe</div>
-                            <div>💻 github.com/johndoe</div>
-                        </div>
-
-                        <div class="resume-left-section">
-                            <h3>Core Skills</h3>
-                            <div>
-                                <span class="resume-pill">React</span>
-                                <span class="resume-pill">TypeScript</span>
-                                <span class="resume-pill">Redux</span>
-                                <span class="resume-pill">Jest</span>
-                                <span class="resume-pill">Cypress</span>
-                                <span class="resume-pill">REST APIs</span>
-                            </div>
-                        </div>
-
-                        <div class="resume-left-section">
-                            <h3>Tooling</h3>
-                            <div>
-                                <span class="resume-pill">Git</span>
-                                <span class="resume-pill">CI/CD</span>
-                                <span class="resume-pill">Webpack</span>
-                                <span class="resume-pill">Vite</span>
-                            </div>
-                        </div>
-
-                        <div class="resume-left-section">
-                            <h3>Highlights</h3>
-                            <ul style="margin-left:1.1rem; font-size:0.85rem; color:#e5e7eb;">
-                                <li>5+ years building production React apps</li>
-                                <li>Strong focus on performance & DX</li>
-                                <li>Comfortable collaborating with cross-functional teams</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT COLUMN -->
-                    <div class="resume-right">
-                        <div class="resume-header-line">
-                            <div>
-                                <div style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.08em; color:#6b7280;">
-                                    Tailored Resume
-                                </div>
-                                <div style="font-size:1.05rem; font-weight:600; color:#111827;">
-                                    Target role: ${safeTitle}
-                                </div>
-                            </div>
-                            <span>Generated: ${safeTime}</span>
-                        </div>
-
-                        <div class="resume-section">
-                            <h2 class="resume-section-title">Summary</h2>
-                            <p>
-                                Frontend engineer specializing in React and TypeScript, with experience
-                                in state management, testing, and performance optimization. This resume
-                                version is tailored based on the job description you provided.
-                            </p>
-                        </div>
-
-                        <div class="resume-section">
-                            <h2 class="resume-section-title">Matched Highlights from JD</h2>
-                            <p class="jd-snippet">
-                                ${jdText ? jdText.substring(0, 650) : 'No job description text available. Paste a JD and generate again for a richer match.'}
-                            </p>
-                        </div>
-
-                        <div class="resume-section">
-                            <h2 class="resume-section-title">Experience (Sample)</h2>
-                            <ul>
-                                <li>Built and maintained large-scale React applications using TypeScript and modern tooling.</li>
-                                <li>Implemented state management using Redux Toolkit and Context API.</li>
-                                <li>Optimized bundle size and Web Vitals, improving Lighthouse scores by 30%+.</li>
-                                <li>Set up and maintained Jest + Cypress test suites with CI integration.</li>
-                            </ul>
-                        </div>
-
-                        <div class="resume-section">
-                            <h2 class="resume-section-title">Projects</h2>
-                            <ul>
-                                <li><strong>Resume Matching Platform:</strong> Full-stack MERN application that matches JDs to candidate skills and proofs.</li>
-                                <li><strong>Design System:</strong> Built a reusable React component library used across 3 internal products.</li>
-                            </ul>
-                        </div>
-
-                        <div class="resume-section">
-                            <h2 class="resume-section-title">Education</h2>
-                            <p>B.Sc. in Computer Science & Engineering — BRAC University</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            modal.classList.remove('hidden');
-        }
-        
-            function downloadResumePDF() {
-    const resumeBody = document.getElementById('resumePreviewBody');
-    if (!resumeBody) {
-        alert('Nothing to download yet. Please generate and preview the resume first.');
-        return;
     }
 
-    // Get just the inner resume HTML (2-column layout)
-    const resumeHTML = resumeBody.innerHTML;
+    // --- HELPER FUNCTIONS ---
+    function openPreviewModal() {
+        document.getElementById('preview-modal').style.display = 'flex';
+    }
 
-    // Grab your main <style> content so the design matches
-    const styleTag = document.querySelector('style');
-    const styles = styleTag ? styleTag.innerHTML : '';
+    function closePreviewModal() {
+        document.getElementById('preview-modal').style.display = 'none';
+    }
 
-    // Open a clean new window
-    const printWindow = window.open('', '_blank');
-
-    printWindow.document.open();
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>${lastGeneratedJobTitle || 'Tailored Resume'}</title>
-            <style>
-                ${styles}
-                /* Reset page for print */
-                body {
-                    margin: 0;
-                    padding: 24px;
-                    background: #ffffff;
-                }
-                .resume-preview-body {
-                    margin: 0;
-                    border: none;
-                    padding: 0;
-                    background: #ffffff;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="resume-preview-body">
-                ${resumeHTML}
-            </div>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-
-    // Give it a moment to render, then trigger print dialog
-    printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();      // user selects "Save as PDF"
-        printWindow.close();
-    }, 500);
-}
-
-        function closeResumePreview() {
-            const modal = document.getElementById('resumePreviewModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-
+    function downloadPDF() {
+        const element = document.getElementById('resume-content-display');
+        
+        const opt = {
+            margin:       [0.3, 0.5], // [Top/Bottom, Left/Right] in inches
+            filename:     'Tailored_Resume.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { 
+                scale: 2, 
+                scrollY: 0,      // <--- THIS FIXES THE BLANK SPACE ISSUE
+                useCORS: true,   // Ensures images load correctly
+                logging: false
+            },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        html2pdf().set(opt).from(element).save();
+    }
 
         // Smooth scrolling for sidebar links
         document.querySelectorAll('.sidebar-menu a').forEach(link => {

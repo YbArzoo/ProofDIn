@@ -3,8 +3,9 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken'); // <--- Added JWT
+const jwt = require('jsonwebtoken'); 
 const connectDB = require('./config/db');
+const path = require('path'); // <--- NEW: Added this
 
 // 2. IMPORT CONTROLLER
 const resumeController = require('./controllers/resumeController'); 
@@ -22,6 +23,14 @@ app.use(cors());
 app.use(express.json());
 
 // =========================================================
+// 📂 STATIC FILE SERVING (NEW SECTION)
+// =========================================================
+// This allows you to access your frontend files at localhost:5000/pages/sourcing.html
+app.use(express.static(path.join(__dirname, '../client')));
+// =========================================================
+
+
+// =========================================================
 // 🔥 PRIORITY ROUTE (Now with Authentication!)
 // =========================================================
 app.post('/api/candidate/generate-resume', async (req, res) => {
@@ -37,7 +46,7 @@ app.post('/api/candidate/generate-resume', async (req, res) => {
     try {
         // 2. DECODE TOKEN
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // <--- This fixes the 'userId' error!
+        req.user = decoded; 
         console.log("User Authenticated ID:", req.user.userId || req.user.id);
 
         // 3. CALL CONTROLLER
@@ -58,17 +67,16 @@ const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 
-
-
 app.use('/api/recruiters', require('./routes/recruiterRoutes'));
 app.use('/api/shortlist', require('./routes/shortlistRoutes'));
-
 
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/candidate', candidateRoutes);
 
 app.get('/', (req, res) => {
+  // OPTIONAL: Redirect root to your login page instead of the text message
+  // res.sendFile(path.join(__dirname, '../client/pages/login.html'));
   res.send('ProofDIn API is running...');
 });
 

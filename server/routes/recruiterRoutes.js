@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/authMiddleware'); // Ensure this matches your actual middleware filename
-const { 
-    getRecruiterProfile, 
-    updatePersonalInfo, 
-    updateOrgInfo 
-} = require('../controllers/recruiterController');
 
-// All routes are protected by JWT auth
-router.get('/me', auth, getRecruiterProfile);
-router.put('/me/personal', auth, updatePersonalInfo);
-router.put('/me/organization', auth, updateOrgInfo);
+// FIX: Use the correct filename 'authMiddleware' instead of 'auth'
+const auth = require('../middleware/authMiddleware'); 
+const upload = require('../middleware/upload'); 
+const recruiterController = require('../controllers/recruiterController');
+
+// Existing Routes
+router.get('/me', auth, recruiterController.getRecruiterProfile);
+router.put('/me/personal', auth, recruiterController.updatePersonalInfo);
+router.put('/me/organization', auth, recruiterController.updateOrgInfo);
+
+// Upload Route
+router.post('/me/avatar', auth, upload.single('image'), recruiterController.uploadProfilePicture);
 
 module.exports = router;

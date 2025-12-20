@@ -1,0 +1,79 @@
+/* Job Post Form Styles */
+
+.job-post-form-section {
+    background-color: white; border-radius: var(--border-radius); padding: 2rem;
+    box-shadow: var(--box-shadow); margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+    padding-bottom: 1rem; border-bottom: 2px solid var(--primary-light);
+}
+.section-header i { font-size: 1.8rem; color: var(--primary); }
+.section-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); margin: 0; }
+
+/* Form Elements */
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--dark); }
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 0.8rem; border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius); font-size: 1rem; font-family: inherit;
+    transition: 0.3s;
+}
+.form-group input:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-help-text { font-size: 0.85rem; color: var(--secondary); margin-top: 0.3rem; }
+
+/* Skill Input Box */
+.skill-input-box { display: flex; gap: 0.5rem; width: 100%; }
+.skill-input-box button {
+    padding: 0.8rem 1.2rem; background-color: var(--primary); color: white;
+    border: none; border-radius: var(--border-radius); cursor: pointer; font-weight: 600;
+}
+.skill-input-box button:hover { background-color: var(--primary-dark); }
+
+.skills-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.skill-tag {
+    background-color: var(--primary-light); color: var(--primary); padding: 0.5rem 1rem;
+    border-radius: 20px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px;
+}
+.skill-tag i { cursor: pointer; }
+.skill-tag i:hover { color: var(--danger); }
+
+/* Selection Buttons (Radio/Checkbox Style) */
+.selection-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.selection-option { flex: 1; min-width: 150px; }
+/* Hide default radio/checkbox */
+.selection-option input { display: none; }
+
+.selection-label {
+    display: block; padding: 1rem; border: 2px solid #e0e0e0; border-radius: var(--border-radius);
+    text-align: center; cursor: pointer; transition: 0.3s; font-weight: 600;
+}
+/* Selected State */
+.selection-option input:checked + .selection-label {
+    border-color: var(--primary); background-color: var(--primary-light); color: var(--primary);
+}
+.selection-label:hover { border-color: var(--primary); }
+
+/* Preview Card */
+.job-preview {
+    background-color: #f9f9f9; border-radius: var(--border-radius);
+    padding: 1.5rem; margin-top: 2rem;
+}
+.preview-content {
+    background-color: white; padding: 1.5rem; border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary);
+}
+
+.preview-header h2 { margin: 0 0 5px 0; color: #333; }
+.preview-meta { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
+.preview-salary { font-weight: 600; color: #28a745; margin-bottom: 1rem; }
+
+@media (max-width: 768px) {
+    .form-row { grid-template-columns: 1fr; }
+    .selection-group { flex-direction: column; }
+}

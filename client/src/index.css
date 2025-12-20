@@ -1,0 +1,25 @@
+/* GLOBAL THEME & RESET */
+:root {
+  --primary: #4a6cf7;
+  --primary-dark: #3a56d4;
+  --primary-light: #eef2ff;
+  --secondary: #6c757d;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --border-radius: 8px;
+  --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background-color: #f5f7fb; color: var(--dark); line-height: 1.6; }
+
+/* Utilities */
+.btn { padding: 0.6rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; cursor: pointer; transition: var(--transition); border: none; font-size: 1rem; }
+.btn-primary { background-color: var(--primary); color: white; }
+.btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-2px); }
+.btn-github { background-color: #24292e; color: white; width: 100%; }
+.btn-linkedin { background-color: #0077b5; color: white; width: 100%; }

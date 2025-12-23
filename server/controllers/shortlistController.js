@@ -1,7 +1,6 @@
 const Shortlist = require('../models/Shortlist');
 const CandidateProfile = require('../models/CandidateProfile');
-const User = require('../models/User'); 
-const sendEmail = require('../utils/emailService'); // Import only once at the top
+const nodemailer = require('nodemailer');
 
 // @desc    Add candidate to shortlist
 // @route   POST /api/shortlist/add
@@ -96,54 +95,68 @@ exports.removeFromShortlist = async (req, res) => {
   }
 };
 
-// @desc    Send email to candidate
+// @desc    Send email to candidate (Ethereal Simulation)
+// @route   POST /api/shortlist/contact
+// @desc    Send email to candidate (Safe Mode)
+// @route   POST /api/shortlist/contact
+// @desc    Send email to candidate (Smart Simulation)
 // @route   POST /api/shortlist/contact
 exports.contactCandidate = async (req, res) => {
   try {
-    const { candidateId, message } = req.body;
-    const recruiterId = req.user.userId || req.user.id || req.user._id;
+      const { candidateId, message } = req.body;
 
-    // 1. Find the Candidate's User Info (to get email)
-    const candidateProfile = await CandidateProfile.findById(candidateId).populate('user');
-    
-    if (!candidateProfile || !candidateProfile.user) {
-        return res.status(404).json({ message: "Candidate email not found." });
-    }
+      // 1. Prepare the Email HTML Design
+      const emailHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 40px; background-color: #f9f9f9; display: flex; justify-content: center;">
+              <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; width: 100%;">
+                  <div style="border-bottom: 2px solid #4a6cf7; padding-bottom: 10px; margin-bottom: 20px;">
+                      <h2 style="color: #4a6cf7; margin: 0;">ProofdIn</h2>
+                  </div>
+                  <h3 style="color: #333;">Application Update</h3>
+                  <p style="font-size: 16px; color: #555; line-height: 1.6;">${message}</p>
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999;">
+                      <p>This is a simulated email sent via ProofdIn Platform.</p>
+                  </div>
+              </div>
+          </div>
+      `;
 
-    const candidateEmail = candidateProfile.user.email;
-    const candidateName = candidateProfile.user.fullName;
+      // 2. Try to send real email via Ethereal
+      try {
+          const testAccount = await nodemailer.createTestAccount();
+          const transporter = nodemailer.createTransport({
+              host: 'smtp.ethereal.email',
+              port: 587,
+              secure: false,
+              auth: { user: testAccount.user, pass: testAccount.pass },
+              connectionTimeout: 5000
+          });
 
-    // 2. Send the Email
-    const subject = `Interview Interest from ProofDIn`;
-    const fullMessage = `Hi ${candidateName},\n\n${message}\n\nBest,\nRecruiter Team`;
-    
-    const previewUrl = await sendEmail(candidateEmail, subject, fullMessage);
+          const info = await transporter.sendMail({
+              from: '"ProofdIn Recruiter" <recruiter@proofdin.com>',
+              to: "candidate@demo.com",
+              subject: "Update from ProofdIn",
+              html: emailHtml
+          });
 
-    if (previewUrl) {
-        // 3. Auto-save to shortlist if not already there
-        const existing = await Shortlist.findOne({ recruiter: recruiterId, candidate: candidateId });
-        if (!existing) {
-            await Shortlist.create({
-                recruiter: recruiterId,
-                candidate: candidateId,
-                status: 'interviewing', // Auto-move to interviewing
-                note: 'Contacted via email'
-            });
-        } else {
-            // Update status if they were just "saved"
-            if (existing.status === 'saved') {
-                existing.status = 'interviewing';
-                await existing.save();
-            }
-        }
+          const previewUrl = nodemailer.getTestMessageUrl(info);
+          console.log("✅ Email sent! Preview URL:", previewUrl);
+          
+          return res.json({ message: 'Email sent successfully', previewUrl });
 
-        res.json({ success: true, message: "Email sent successfully!", previewUrl });
-    } else {
-        res.status(500).json({ message: "Failed to send email." });
-    }
+      } catch (emailErr) {
+          // 3. FALLBACK: Network Blocked? Send HTML to frontend to display manually!
+          console.log("⚠️ Network blocked email. Sending Offline Simulation.");
+          
+          return res.json({ 
+              message: 'Email simulated (Offline Mode)', 
+              previewUrl: null,
+              simulatedHtml: emailHtml // <--- THIS is the magic key
+          });
+      }
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error sending email' });
+      console.error("Server Error:", err);
+      res.status(500).json({ message: 'Server error' });
   }
 };

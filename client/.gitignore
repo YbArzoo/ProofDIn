@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# ADD THIS LINE:
+.vite/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

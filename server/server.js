@@ -7,7 +7,6 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const connectDB = require('./config/db');
-const path = require('path'); // <--- THIS WAS MISSING
 
 // 2. IMPORT CONTROLLERS
 // (We import this AFTER dotenv config so it can find the API Key)

@@ -316,3 +316,89 @@ exports.updateJob = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// --- ADD THIS TO THE BOTTOM OF jobController.js ---
+
+// @desc    Candidate applies for a job
+// @route   POST /api/jobs/:id/apply
+// --- ADD THIS TO THE BOTTOM OF jobController.js ---
+
+// @desc    Candidate applies for a job
+// @route   POST /api/jobs/:id/apply
+exports.applyForJob = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+
+        const userId = req.user?.userId || req.user?.id || req.user?._id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized: User ID missing' });
+        }
+
+        // --- SELF-HEALING FIX ---
+        // Filter out any "bad" applicants from previous errors (entries with no candidate ID)
+        if (job.applicants && job.applicants.length > 0) {
+            job.applicants = job.applicants.filter(app => app.candidate);
+        }
+
+        // Check if already applied
+        const isAlreadyApplied = job.applicants.some(
+            (app) => app.candidate.toString() === userId.toString()
+        );
+
+        if (isAlreadyApplied) {
+            return res.status(400).json({ message: 'You have already applied to this job' });
+        }
+
+        // Add the new valid application
+        job.applicants.push({
+            candidate: userId,
+            status: 'Applied', 
+            appliedAt: new Date()
+        });
+
+        await job.save();
+
+        res.status(200).json({ message: 'Applied successfully', applicants: job.applicants });
+
+    } catch (err) {
+        console.error("Apply Job Error:", err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get jobs the candidate has applied to
+// @route   GET /api/jobs/applied
+exports.getAppliedJobs = async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id || req.user._id;
+
+        // 1. Find jobs where 'applicants.candidate' matches the user ID
+        const jobs = await Job.find({ 'applicants.candidate': userId })
+            .populate('recruiter', 'orgName')
+            .sort({ 'applicants.appliedAt': -1 });
+
+        // 2. Format the data so the frontend can easily read "myStatus"
+        // The frontend expects { myStatus, myAppliedDate }, but the DB has them nested in the array.
+        const formattedJobs = jobs.map(job => {
+            // Find the specific application object for this user within the job
+            const myApp = job.applicants.find(app => app.candidate.toString() === userId.toString());
+            
+            return {
+                _id: job._id,
+                title: job.title,
+                company: job.recruiter?.orgName || 'Confidential',
+                locationType: job.locationType,
+                // Send the specific status and date for this user
+                myStatus: myApp ? myApp.status : 'Applied',
+                myAppliedDate: myApp ? myApp.appliedAt : job.createdAt
+            };
+        });
+
+        res.json(formattedJobs);
+    } catch (err) {
+        console.error("Get Applied Jobs Error:", err);
+        res.status(500).json({ message: 'Server Error fetching applied jobs' });
+    }
+};

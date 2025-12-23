@@ -1,8 +1,6 @@
-// server/routes/jobRoutes.js
 const express = require('express');
 const router = express.Router();
 
-// 1. UPDATE IMPORTS: Add parseJobDescription to this list
 const { 
     analyzeJob, 
     matchCandidates, 
@@ -11,42 +9,31 @@ const {
     deleteJob,
     getJob,
     updateJob,
-    parseJobDescription // <--- THIS WAS MISSING
+    parseJobDescription,
+    applyForJob,
+    getAppliedJobs
 } = require('../controllers/jobController');
 
 const auth = require('../middleware/authMiddleware');
 
 // --- EXISTING ROUTES ---
-
-// POST /api/jobs/analyze (Protected)
 router.post('/analyze', auth, analyzeJob);
-
-// POST /api/jobs/match (Protected)
 router.post('/match', auth, matchCandidates);
-
-// GET /api/jobs (Public - Get all jobs for portal)
 router.get('/', getAllJobs);
-
-
-// --- NEW ROUTES FOR RECRUITER DASHBOARD ---
-
-// GET /api/jobs/myjobs (Protected - Get only logged-in recruiter's jobs)
-// IMPORTANT: This must remain ABOVE the /:id routes
 router.get('/myjobs', auth, getMyJobs);
+router.post('/parse-jd', auth, parseJobDescription);
 
-// --- AI PARSING ROUTE ---
-// POST /api/jobs/parse-jd (Parse raw text into form fields)
-router.post('/parse-jd', auth, parseJobDescription); // <--- New Route
+// --- NEW ROUTES (ORDER MATTERS!) ---
 
-// --- SINGLE JOB OPERATIONS (ID BASED) ---
+// 1. GET APPLIED JOBS (MUST BE ABOVE /:id) <--- MOVED THIS UP
+router.get('/applied', auth, getAppliedJobs); 
 
-// GET /api/jobs/:id (Get single job details for editing)
-router.get('/:id', auth, getJob);
+// 2. APPLY TO JOB
+router.post('/:id/apply', auth, applyForJob);
 
-// PUT /api/jobs/:id (Update job details)
+// 3. SINGLE JOB ROUTES (Dynamic IDs must be last)
+router.get('/:id', auth, getJob); // <--- This catches everything else
 router.put('/:id', auth, updateJob);
-
-// DELETE /api/jobs/:id (Delete a specific job)
 router.delete('/:id', auth, deleteJob);
 
 module.exports = router;

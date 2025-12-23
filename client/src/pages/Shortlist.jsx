@@ -61,6 +61,8 @@ const Shortlist = () => {
     };
 
     // --- 3. CONTACT CANDIDATE (Restored Feature) ---
+    // --- 3. CONTACT CANDIDATE (Fixed for Simulation) ---
+    // --- 3. CONTACT CANDIDATE (Restored "Nice" Simulation) ---
     const contactCandidate = async (candidateId, shortlistId) => {
         const message = prompt("Enter message for candidate:", "We are interested in your profile.");
         if (!message) return;
@@ -72,12 +74,24 @@ const Shortlist = () => {
                 { headers: { 'x-auth-token': token } }
             );
 
-            if (res.data.previewUrl) {
-                // Auto-move to "interviewing" if email sent
+            // Move card to "Interviewing"
+            if (res.status === 200) {
                 updateStatus(shortlistId, 'interviewing');
-                
-                if(confirm("Email sent! Status updated to 'Interviewing'. View simulated email?")) {
-                    window.open(res.data.previewUrl, '_blank');
+
+                // 1. Check for Real Ethereal Link
+                if (res.data.previewUrl) {
+                    if(confirm("Email Sent! Status updated to 'Interviewing'.\n\nDo you want to view the simulated email in Ethereal?")) {
+                        window.open(res.data.previewUrl, '_blank');
+                    }
+                } 
+                // 2. Check for Offline HTML (The Fix!)
+                else if (res.data.simulatedHtml) {
+                    if(confirm("Email Simulated! Status updated to 'Interviewing'.\n(Network blocked real sending)\n\nDo you want to view the generated email preview?")) {
+                        // Create a temporary page in the browser
+                        const blob = new Blob([res.data.simulatedHtml], { type: 'text/html' });
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                    }
                 }
             }
         } catch (err) {

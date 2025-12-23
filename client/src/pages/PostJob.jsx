@@ -201,7 +201,10 @@ const PostJob = () => {
 
     return (
         <Layout title={isEditMode ? "Edit Job" : "Post a Job"} user={user}>
-            <div className="dashboard-container">
+            
+            {/* ✅ ADD THIS WRAPPER: Centers the form and gives it a max-width */}
+            <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+                
                 <div className="job-post-form-section">
                     <div className="section-header">
                         <i className="fas fa-briefcase"></i>

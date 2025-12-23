@@ -95,32 +95,65 @@ const JobPortal = () => {
         <div style={{minHeight:'100vh', background:'#f5f7fb'}}>
             
             {/* HEADER */}
-            <header className="dashboard-header" style={{background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', position: 'sticky', top: 0, zIndex: 100}}>
-                <nav style={{maxWidth: '1200px', margin: '0 auto', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                    <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-                        <div style={{width: '42px', height: '42px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: '1.2rem'}}>
+            {/* HEADER (Fixed: Blue Gradient) */}
+            <header className="public-header" style={{
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', 
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)', 
+                position: 'sticky', top: 0, zIndex: 100,
+                color: 'white'
+            }}>
+                <nav style={{
+                    maxWidth: '1200px', margin: '0 auto', padding: '1rem 2rem', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                }}>
+                    {/* Logo (White Text) */}
+                    <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none', color:'white'}}>
+                        <div style={{
+                            width: '42px', height: '42px', borderRadius: '8px', 
+                            background: 'rgba(255,255,255,0.2)', // Glass effect
+                            display: 'grid', placeItems: 'center', color: '#fff', fontSize: '1.2rem'
+                        }}>
                             <i className="fas fa-bolt"></i>
                         </div>
-                        <span style={{fontSize: '1.6rem', fontWeight: 800, color: 'var(--primary)'}}>ProofdIn</span>
+                        <span style={{fontSize: '1.6rem', fontWeight: 800}}>ProofdIn</span>
                     </a>
 
+                    {/* Nav Actions */}
                     <div style={{display:'flex', gap:'0.8rem', alignItems:'center'}}>
                         {user ? (
                             <>
-                                <button 
-                                    className="btn" 
-                                    style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--primary)'}}
+                                {user.role === 'recruiter' && (
+                                    <button 
+                                        className="btn" 
+                                        style={{background:'rgba(255,255,255,0.2)', color:'white', border:'none'}}
+                                        onClick={() => navigate('/dashboard')}
+                                    >
+                                        Dashboard
+                                    </button>
+                                )}
+                                <div 
+                                    style={{
+                                        width: '40px', 
+                                        height: '40px', 
+                                        minWidth: '40px',  /* 🔥 Fixes Squashing */
+                                        borderRadius: '50%', 
+                                        background: 'white', 
+                                        color: 'var(--primary)', 
+                                        display: 'grid', 
+                                        placeItems: 'center', 
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer', /* 🔥 Makes it look clickable */
+                                        flexShrink: 0      /* 🔥 Prevents shrinking */
+                                    }}
+                                    /* 🔥 Adds Navigation */
                                     onClick={() => navigate(user.role === 'recruiter' ? '/dashboard' : '/candidate-dashboard')}
                                 >
-                                    Dashboard
-                                </button>
-                                <div style={{width:40, height:40, borderRadius:'50%', background:'var(--primary)', color:'white', display:'grid', placeItems:'center', fontWeight:'bold'}}>
                                     {(user.fullName || 'U')[0].toUpperCase()}
                                 </div>
-                                <button className="btn" style={{border:'1px solid #ddd'}} onClick={handleLogout}>Logout</button>
+                                <button className="btn" style={{border:'1px solid rgba(255,255,255,0.5)', color:'white', background:'transparent'}} onClick={handleLogout}>Logout</button>
                             </>
                         ) : (
-                            <button className="btn" style={{background:'var(--primary)', color:'white'}} onClick={() => navigate('/')}>Login</button>
+                            <button className="btn" style={{background:'white', color:'var(--primary)'}} onClick={() => navigate('/')}>Login</button>
                         )}
                     </div>
                 </nav>

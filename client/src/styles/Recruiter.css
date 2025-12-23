@@ -1,0 +1,73 @@
+/* Dashboard & Shortlist Styles */
+
+/* --- JOB POST SECTION --- */
+.job-post-section {
+    background-color: white; border-radius: var(--border-radius); padding: 2rem;
+    box-shadow: var(--box-shadow); margin-bottom: 2rem;
+}
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.section-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); margin: 0; }
+.section-subtitle { color: var(--secondary); margin-bottom: 1.5rem; }
+
+.job-input-container { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 1rem; }
+.job-input { display: flex; flex-direction: column; }
+.job-input textarea {
+    width: 100%; height: 200px; padding: 1rem; border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius); resize: vertical; font-size: 1rem; margin-bottom: 1rem;
+}
+.skills-extracted { background-color: #f9f9f9; border-radius: var(--border-radius); padding: 1.5rem; }
+.skills-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.skill-tag {
+    background-color: var(--primary-light); color: var(--primary); padding: 0.5rem 1rem;
+    border-radius: 20px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;
+}
+
+/* --- SEARCH SECTION --- */
+.search-section { background-color: white; border-radius: var(--border-radius); padding: 2rem; box-shadow: var(--box-shadow); margin-bottom: 2rem; }
+.search-container { display: flex; gap: 1rem; margin-top: 1rem; }
+.search-input { flex: 1; position: relative; }
+.search-input input { width: 100%; padding: 1rem 1rem 1rem 3rem; border: 1px solid #e0e0e0; border-radius: var(--border-radius); }
+.search-input i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--secondary); }
+.search-examples { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.search-example { background-color: #f0f0f0; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: 0.3s; }
+.search-example:hover { background-color: #e0e0e0; }
+
+/* --- CANDIDATE CARDS --- */
+.candidates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+.candidate-card {
+    border: 1px solid #e0e0e0; border-radius: var(--border-radius); padding: 1.5rem;
+    transition: var(--transition); position: relative; background: white;
+}
+.candidate-card:hover { border-color: var(--primary); box-shadow: var(--box-shadow); }
+.candidate-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.candidate-anonymous {
+    width: 60px; height: 60px; border-radius: 50%; background-color: #e0e0e0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--secondary);
+}
+.candidate-title { font-weight: 700; font-size: 1.2rem; }
+.match-score { background-color: var(--success); color: white; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-top: 5px; }
+.why-matched { background-color: #f0f7ff; border-left: 4px solid var(--primary); padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+.candidate-actions { display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f0f0f0; }
+
+/* --- KANBAN BOARD (SHORTLIST) --- */
+.kanban-board {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;
+    align-items: start; padding-bottom: 2rem; overflow-x: auto;
+}
+.kanban-column { background: #eef2f6; border-radius: var(--border-radius); padding: 1rem; min-height: 500px; }
+.column-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
+    padding-bottom: 0.5rem; border-bottom: 2px solid #ddd; font-weight: 700; color: var(--secondary); text-transform: uppercase;
+}
+.kanban-card {
+    background: white; border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s;
+}
+.kanban-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.card-actions select { padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.8rem; }
+.delete-btn { color: var(--secondary); border: none; background: none; cursor: pointer; }
+.delete-btn:hover { color: var(--danger); }
+
+@media (max-width: 1200px) {
+    .job-input-container { grid-template-columns: 1fr; }
+}

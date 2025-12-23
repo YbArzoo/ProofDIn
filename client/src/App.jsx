@@ -1,25 +1,33 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-// Correct imports based on your screenshot
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import CandidateDashboard from './pages/CandidateDashboard';
-import Skills from './pages/Skills';
-import CandidateProfile from './pages/CandidateProfile'; 
+import Home from './pages/Home'; // NEW
+import Sourcing from './pages/Sourcing';
+import Recruiter from './pages/Recruiter';
+import Shortlist from './pages/Shortlist';
+import RecruiterProfile from './pages/RecruiterProfile';
+import PostJob from './pages/PostJob';
+import MyJobs from './pages/MyJobs';
 import JobPortal from './pages/JobPortal';
-import AppliedJobs from './pages/AppliedJobs';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
-        <Route path="/jobs" element={<JobPortal />} />
-        <Route path="/skills" element={<Skills />} />
-        <Route path="/candidate-profile" element={<CandidateProfile />} />
-        <Route path="/applied-jobs" element={<AppliedJobs />} />
-
+        {/* Change "/" to point to Home instead of Login */}
+        <Route path="/" element={<Home />} />
+        
+        {/* Move Login to its own route */}
+        <Route path="/login" element={<Login />} />
+        
+        <Route path="/dashboard" element={<Recruiter />} />
+        <Route path="/sourcing" element={<Sourcing />} />
+        <Route path="/shortlist" element={<Shortlist />} />
+        <Route path="/profile" element={<RecruiterProfile />} />
+        <Route path="/post-job" element={<PostJob />} />
+        <Route path="/my-jobs" element={<MyJobs />} />
+        <Route path="/job-portal" element={<JobPortal />} />
+        
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

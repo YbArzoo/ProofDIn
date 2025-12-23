@@ -4,6 +4,7 @@ const recruiterProfileSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     // Organization Details
+    profilePicture: { type: String },
     orgName: { type: String, required: true },
     orgRole: { type: String, required: true }, // Job Title
     orgWebsite: { type: String },

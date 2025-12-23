@@ -146,4 +146,10 @@
     background: none; border: none; cursor: pointer; color: var(--danger);
     padding: 4px; transition: 0.2s;
 }
+
+/* Add this for the new column color */
+.col-emailed {
+    border-top: 4px solid #f39c12; /* Orange/Amber color to signify "Pending Action" */
+    background-color: #fffaf0;
+}
 .move-btn:hover, .delete-btn:hover { transform: scale(1.2); }

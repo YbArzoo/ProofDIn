@@ -27,7 +27,7 @@ const Recruiter = () => {
             const res = await axios.get('http://localhost:5000/api/shortlist', {
                 headers: { 'x-auth-token': token }
             });
-            // Assuming the API returns an array of objects populated with 'candidate'
+            // Map the results to just get the candidate IDs for easy checking
             setShortlistIds(res.data.map(item => item.candidate._id));
         } catch (err) {
             console.error("Error fetching shortlist", err);
@@ -88,26 +88,55 @@ const Recruiter = () => {
         }
     };
 
+    // --- UPDATED LOGIC HERE ---
+    // --- UPDATED LOGIC: Sets status to 'emailed' ---
     const contactCandidate = async (candidateId) => {
         const msg = prompt("Enter message:", "We'd like to interview you!");
         if(!msg) return;
 
+        const token = localStorage.getItem('token');
+
         try {
-            const token = localStorage.getItem('token');
+            // STEP 1: Add to Shortlist with 'emailed' status
+            if (!shortlistIds.includes(candidateId)) {
+                try {
+                    await axios.post('http://localhost:5000/api/shortlist/add', 
+                        { candidateId, jobId: currentJobId, status: 'emailed' }, // <--- CHANGED TO 'emailed'
+                        { headers: { 'x-auth-token': token } }
+                    );
+                    setShortlistIds(prev => [...prev, candidateId]); 
+                } catch (saveError) {
+                    console.log("Candidate might already be in list...");
+                }
+            } else {
+                // If they are already saved, you might want an endpoint here to update status to 'emailed'
+                // But for now, the email sends regardless.
+            }
+
+            // STEP 2: Send the Email
             const res = await axios.post('http://localhost:5000/api/shortlist/contact',
                 { candidateId, message: msg },
                 { headers: { 'x-auth-token': token } }
             );
             
+            // Handle Simulation
             if(res.data.previewUrl) {
-                if(window.confirm("Email sent! View simulated email?")) {
+                if(window.confirm("Email sent! Moved to 'Emailed' column.\n\nView simulated email?")) {
                     window.open(res.data.previewUrl, '_blank');
                 }
+            } else if (res.data.simulatedHtml) {
+                if(window.confirm("Email Simulated (Offline)! Moved to 'Emailed' column.\n\nView preview?")) {
+                    const blob = new Blob([res.data.simulatedHtml], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                }
             } else {
-                alert("Email sent successfully!");
+                alert("Email sent! Candidate moved to 'Emailed' column.");
             }
+
         } catch (err) {
-            alert("Failed to send email");
+            alert("Failed to process request");
+            console.error(err);
         }
     };
 

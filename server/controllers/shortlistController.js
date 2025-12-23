@@ -1,37 +1,75 @@
 const Shortlist = require('../models/Shortlist');
 const CandidateProfile = require('../models/CandidateProfile');
+const Job = require('../models/Job'); // <--- IMPORT JOB MODEL
 const nodemailer = require('nodemailer');
+
+// Helper to sync status back to the main Job Application
+const syncJobApplicationStatus = async (jobId, candidateUserId, newStatus) => {
+    if (!jobId || !candidateUserId) return;
+    
+    try {
+        // Map Shortlist status to Candidate-facing status
+        // shortlist status -> job application status
+        const statusMap = {
+            'saved': 'Shortlisted',
+            'emailed': 'Contacted',
+            'interviewing': 'Interviewing',
+            'offer': 'Offer Received',
+            'rejected': 'Rejected'
+        };
+
+        const publicStatus = statusMap[newStatus] || 'Applied';
+
+        await Job.updateOne(
+            { _id: jobId, "applicants.candidate": candidateUserId },
+            { $set: { "applicants.$.status": publicStatus } }
+        );
+        console.log(`Synced Job Status for user ${candidateUserId} to ${publicStatus}`);
+    } catch (err) {
+        console.error("Failed to sync job status:", err);
+    }
+};
 
 // @desc    Add candidate to shortlist
 // @route   POST /api/shortlist/add
 exports.addToShortlist = async (req, res) => {
   try {
-    const { candidateId, jobId, status } = req.body;
+    const { candidateId, jobId, status } = req.body; 
+    // Note: 'candidateId' from frontend is the USER ID.
     
-    // Robust User ID Extraction
     const recruiterId = req.user.userId || req.user.id || req.user._id;
+    if (!recruiterId) return res.status(401).json({ message: "User not authenticated" });
 
-    if (!recruiterId) {
-        return res.status(401).json({ message: "User not authenticated properly" });
-    }
+    // 1. Find Profile ID
+    const profile = await CandidateProfile.findOne({ user: candidateId });
+    if (!profile) return res.status(404).json({ message: 'Candidate Profile not found' });
+    const correctProfileId = profile._id;
 
-    // Check if already saved
-    const existing = await Shortlist.findOne({
+    // 2. Cleanup old/ghost entries
+    await Shortlist.deleteOne({ recruiter: recruiterId, candidate: candidateId, job: jobId || null });
+
+    // 3. Check existing
+    const existingCorrect = await Shortlist.findOne({
       recruiter: recruiterId,
-      candidate: candidateId,
+      candidate: correctProfileId,
       job: jobId || null
     });
 
-    if (existing) {
-      return res.status(400).json({ message: 'Candidate already shortlisted' });
-    }
+    if (existingCorrect) return res.status(400).json({ message: 'Candidate already shortlisted' });
 
+    // 4. Create Shortlist Entry
+    const initialStatus = status || 'saved';
     const newShortlist = await Shortlist.create({
       recruiter: recruiterId,
-      candidate: candidateId,
+      candidate: correctProfileId,
       job: jobId || null,
-      status: status || 'saved'
+      status: initialStatus
     });
+
+    // 5. ✅ SYNC: Update Candidate's Job Status immediately
+    if (jobId) {
+        await syncJobApplicationStatus(jobId, candidateId, initialStatus);
+    }
 
     res.status(201).json(newShortlist);
   } catch (err) {
@@ -46,17 +84,19 @@ exports.getShortlist = async (req, res) => {
   try {
     const recruiterId = req.user.userId || req.user.id || req.user._id;
     
-    // Fetch shortlist and populate candidate details (Name, Skills, etc.)
     const list = await Shortlist.find({ recruiter: recruiterId })
       .populate({
         path: 'candidate',
-        populate: { path: 'user', select: 'fullName email' }
+        model: 'CandidateProfile',
+        populate: { path: 'user', model: 'User', select: 'fullName email' }
       })
-      .populate('job', 'title');
+      .populate('job', 'title')
+      .sort({ dateAdded: -1 });
 
-    res.json(list);
+    const validList = list.filter(item => item.candidate && item.candidate.user);
+    res.json(validList);
   } catch (err) {
-    console.error(err);
+    console.error("Get Shortlist Error:", err);
     res.status(500).json({ message: 'Server error fetching shortlist' });
   }
 };
@@ -68,13 +108,23 @@ exports.updateStatus = async (req, res) => {
     const { status, note } = req.body;
     const recruiterId = req.user.userId || req.user.id || req.user._id;
     
+    // 1. Update Shortlist
     const updated = await Shortlist.findOneAndUpdate(
       { _id: req.params.id, recruiter: recruiterId },
       { $set: { status, note } },
       { new: true }
-    );
+    ).populate({
+        path: 'candidate',
+        populate: { path: 'user', select: '_id' } // Need User ID for sync
+    });
 
     if (!updated) return res.status(404).json({ message: 'Entry not found' });
+
+    // 2. ✅ SYNC: Update Candidate's Job Status
+    if (updated.job && updated.candidate && updated.candidate.user) {
+        await syncJobApplicationStatus(updated.job, updated.candidate.user._id, status);
+    }
+
     res.json(updated);
   } catch (err) {
     console.error(err);
@@ -87,7 +137,23 @@ exports.updateStatus = async (req, res) => {
 exports.removeFromShortlist = async (req, res) => {
   try {
     const recruiterId = req.user.userId || req.user.id || req.user._id;
-    await Shortlist.findOneAndDelete({ _id: req.params.id, recruiter: recruiterId });
+    
+    // 1. Find before deleting (to get IDs for sync)
+    const item = await Shortlist.findOne({ _id: req.params.id, recruiter: recruiterId })
+        .populate({ path: 'candidate', populate: { path: 'user' }});
+
+    if (item) {
+        await Shortlist.deleteOne({ _id: req.params.id });
+        
+        // 2. ✅ SYNC: Revert status to 'Applied' if removed from shortlist
+        if (item.job && item.candidate?.user?._id) {
+            await Job.updateOne(
+                { _id: item.job, "applicants.candidate": item.candidate.user._id },
+                { $set: { "applicants.$.status": "Applied" } }
+            );
+        }
+    }
+    
     res.json({ message: 'Removed from shortlist' });
   } catch (err) {
     console.error(err);
@@ -95,17 +161,11 @@ exports.removeFromShortlist = async (req, res) => {
   }
 };
 
-// @desc    Send email to candidate (Ethereal Simulation)
-// @route   POST /api/shortlist/contact
-// @desc    Send email to candidate (Safe Mode)
-// @route   POST /api/shortlist/contact
-// @desc    Send email to candidate (Smart Simulation)
+// @desc    Send email to candidate
 // @route   POST /api/shortlist/contact
 exports.contactCandidate = async (req, res) => {
   try {
       const { candidateId, message } = req.body;
-
-      // 1. Prepare the Email HTML Design
       const emailHtml = `
           <div style="font-family: Arial, sans-serif; padding: 40px; background-color: #f9f9f9; display: flex; justify-content: center;">
               <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; width: 100%;">
@@ -121,7 +181,6 @@ exports.contactCandidate = async (req, res) => {
           </div>
       `;
 
-      // 2. Try to send real email via Ethereal
       try {
           const testAccount = await nodemailer.createTestAccount();
           const transporter = nodemailer.createTransport({
@@ -140,18 +199,13 @@ exports.contactCandidate = async (req, res) => {
           });
 
           const previewUrl = nodemailer.getTestMessageUrl(info);
-          console.log("✅ Email sent! Preview URL:", previewUrl);
-          
           return res.json({ message: 'Email sent successfully', previewUrl });
 
       } catch (emailErr) {
-          // 3. FALLBACK: Network Blocked? Send HTML to frontend to display manually!
-          console.log("⚠️ Network blocked email. Sending Offline Simulation.");
-          
           return res.json({ 
               message: 'Email simulated (Offline Mode)', 
               previewUrl: null,
-              simulatedHtml: emailHtml // <--- THIS is the magic key
+              simulatedHtml: emailHtml 
           });
       }
 

@@ -87,10 +87,31 @@ const MyJobs = () => {
                                         {(job.skills || []).slice(0, 4).map((s, i) => <span key={i} className="tag">{s}</span>)}
                                     </div>
 
-                                    <div className="job-actions">
-                                        <button className="btn btn-soft" onClick={(e) => handleEdit(e, job._id)}>
+                                    {/* --- UPDATED ACTION BUTTONS --- */}
+                                    <div className="job-actions" style={{display:'flex', gap:'10px', marginTop:'1rem'}}>
+                                        
+                                        {/* ✅ NEW BUTTON: View Applicants */}
+                                        <button 
+                                            className="btn" 
+                                            style={{ 
+                                                flex: 1, 
+                                                background: '#eef2ff', 
+                                                color: 'var(--primary)', 
+                                                border: '1px solid #d0d7ff',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/jobs/${job._id}/applicants`);
+                                            }}
+                                        >
+                                            <i className="fas fa-users"></i> Applicants ({job.applicants?.length || 0})
+                                        </button>
+
+                                        <button className="btn btn-soft" style={{background:'#f8f9fa'}} onClick={(e) => handleEdit(e, job._id)}>
                                             <i className="fas fa-edit"></i> Edit
                                         </button>
+                                        
                                         <button className="btn btn-outline" style={{color:'var(--danger)', borderColor:'var(--danger)'}} onClick={(e) => handleDelete(e, job._id)}>
                                             <i className="fas fa-trash"></i> Delete
                                         </button>

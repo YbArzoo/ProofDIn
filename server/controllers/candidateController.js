@@ -1,11 +1,12 @@
 // server/controllers/candidateController.js
 const CandidateProfile = require('../models/CandidateProfile');
 const Skill = require('../models/Skill'); 
+const User = require('../models/User'); // <--- CRITICAL IMPORT
 
 // Helper to get User ID safely (handles .id, .userId, or ._id)
 function getSafeUserId(req) {
-    if (!req.user) return null;
-    return req.user.userId || req.user.id || req.user._id;
+  if (!req.user) return null;
+  return req.user.userId || req.user.id || req.user._id;
 }
 
 // Make sure only candidates can use these endpoints
@@ -35,10 +36,23 @@ function ensureCandidateRole(req, res) {
 exports.getMyProfile = async (req, res) => {
   try {
     if (!ensureCandidateRole(req, res)) return;
-    const userId = getSafeUserId(req); // Use safe getter
+    const userId = getSafeUserId(req); 
     const profile = await CandidateProfile.findOne({ user: userId }).lean();
+    
+    // ✅ FIX: Fetch User Data to return Name & Email
+    const user = await User.findById(userId).select('fullName email');
+
     if (!profile) return res.status(404).json({ message: 'Candidate profile not found' });
-    res.json({ profile });
+    
+    // Merge them so frontend gets names too
+    res.json({ 
+        profile: {
+            ...profile,
+            firstName: user?.fullName ? user.fullName.split(' ')[0] : '',
+            lastName: user?.fullName ? user.fullName.split(' ').slice(1).join(' ') : '',
+            email: user?.email
+        }
+    });
   } catch (err) {
     console.error('getMyProfile error:', err);
     res.status(500).json({ message: 'Server error fetching profile' });
@@ -50,24 +64,44 @@ exports.updateMyProfile = async (req, res) => {
     if (!ensureCandidateRole(req, res)) return;
     const userId = getSafeUserId(req);
     
-    // ... (Your existing update logic) ...
-    const { headline, summary, photoUrl, experienceYears, location, education, skills, socialLinks, cvUrl } = req.body;
+    // 1. Extract Data (Added 'phone')
+    const { 
+        firstName, lastName, // User fields
+        headline, summary, phone, photoUrl, experienceYears, location, education, skills, socialLinks, cvUrl // Profile fields
+    } = req.body;
+
+    // 2. Update USER Model (Name changes)
+    if (firstName || lastName) {
+        const currentUser = await User.findById(userId);
+        if (currentUser) {
+            let newFirst = firstName || currentUser.fullName.split(' ')[0];
+            let newLast = lastName || currentUser.fullName.split(' ').slice(1).join(' ');
+            const newFullName = `${newFirst} ${newLast}`.trim();
+            
+            await User.findByIdAndUpdate(userId, { fullName: newFullName });
+        }
+    }
+
+    // 3. Update CANDIDATE PROFILE Model
     const update = {};
     if (headline !== undefined) update.headline = headline;
     if (summary !== undefined) update.summary = summary;
+    if (phone !== undefined) update.phone = phone; // <--- Saving Phone
     if (photoUrl !== undefined) update.photoUrl = photoUrl;
     if (experienceYears !== undefined) update.experienceYears = experienceYears;
     if (location !== undefined) update.location = location;
     if (education !== undefined) update.education = education;
     if (cvUrl !== undefined) update.cvUrl = cvUrl;
-    if (Array.isArray(skills)) update.skills = skills;
-    if (Array.isArray(socialLinks)) update.socialLinks = socialLinks;
+    
+    if (skills) update.skills = skills; 
+    if (socialLinks) update.socialLinks = socialLinks;
 
     const profile = await CandidateProfile.findOneAndUpdate(
       { user: userId },
       { $set: update },
       { new: true, upsert: true }
     ).lean();
+
     res.json({ message: 'Profile updated', profile });
   } catch (err) {
     console.error('updateMyProfile error:', err);
@@ -76,23 +110,14 @@ exports.updateMyProfile = async (req, res) => {
 };
 
 // ==========================================
-// SKILLS FUNCTIONS
+// SKILLS FUNCTIONS (Kept as is)
 // ==========================================
 
-// GET /api/candidate/skills
 exports.getSkills = async (req, res) => {
   try {
-    console.log("---------------------------------------");
-    console.log("--> DEBUG: GET /skills endpoint hit");
-    
     if (!ensureCandidateRole(req, res)) return;
-    
     const currentUserId = getSafeUserId(req);
-    console.log("--> DEBUG: Querying DB for User ID:", currentUserId);
-    
     const skills = await Skill.find({ user: currentUserId }).sort({ createdAt: -1 });
-    console.log(`--> DEBUG: Found ${skills.length} skills`);
-    
     res.json(skills);
   } catch (err) {
     console.error('getSkills error:', err);
@@ -100,25 +125,13 @@ exports.getSkills = async (req, res) => {
   }
 };
 
-// POST /api/candidate/skills
 exports.addSkill = async (req, res) => {
   try {
     if (!ensureCandidateRole(req, res)) return;
-
     const { name, level, category, lastUsed } = req.body;
     const userId = getSafeUserId(req);
-
-    const newSkill = new Skill({
-      user: userId, // Use the safe ID
-      name,
-      level,
-      category,
-      lastUsed,
-      proofs: []
-    });
-
+    const newSkill = new Skill({ user: userId, name, level, category, lastUsed, proofs: [] });
     const savedSkill = await newSkill.save();
-    console.log("--> DEBUG: Skill saved successfully:", savedSkill._id);
     res.json(savedSkill);
   } catch (err) {
     console.error('addSkill error:', err);
@@ -126,19 +139,13 @@ exports.addSkill = async (req, res) => {
   }
 };
 
-// DELETE /api/candidate/skills/:id
 exports.deleteSkill = async (req, res) => {
   try {
     if (!ensureCandidateRole(req, res)) return;
     const userId = getSafeUserId(req);
-
     const skill = await Skill.findById(req.params.id);
     if (!skill) return res.status(404).json({ msg: 'Skill not found' });
-
-    if (skill.user.toString() !== userId) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
+    if (skill.user.toString() !== userId) return res.status(401).json({ msg: 'User not authorized' });
     await skill.deleteOne();
     res.json({ msg: 'Skill removed' });
   } catch (err) {
@@ -147,27 +154,18 @@ exports.deleteSkill = async (req, res) => {
   }
 };
 
-// PUT /api/candidate/skills/:id
 exports.updateSkill = async (req, res) => {
   try {
     if (!ensureCandidateRole(req, res)) return;
     const userId = getSafeUserId(req);
-
     let skill = await Skill.findById(req.params.id);
     if (!skill) return res.status(404).json({ msg: 'Skill not found' });
-
-    // Verify ownership
-    if (skill.user.toString() !== userId.toString()) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
-    // Update fields
+    if (skill.user.toString() !== userId.toString()) return res.status(401).json({ msg: 'User not authorized' });
     const { name, level, category, lastUsed } = req.body;
     skill.name = name || skill.name;
     skill.level = level || skill.level;
     skill.category = category || skill.category;
     skill.lastUsed = lastUsed || skill.lastUsed;
-
     const updatedSkill = await skill.save();
     res.json(updatedSkill);
   } catch (err) {
@@ -176,37 +174,20 @@ exports.updateSkill = async (req, res) => {
   }
 };
 
-// POST /api/candidate/skills/:id/proof
-
 exports.addProof = async (req, res) => {
   try {
     if (!ensureCandidateRole(req, res)) return;
     const userId = getSafeUserId(req);
-
     const skill = await Skill.findById(req.params.id);
     if (!skill) return res.status(404).json({ msg: 'Skill not found' });
-
-    if (skill.user.toString() !== userId.toString()) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
-    // --- NEW LOGIC ---
-    let proofData = {
-      text: req.body.text,
-      type: req.body.type
-    };
-
+    if (skill.user.toString() !== userId.toString()) return res.status(401).json({ msg: 'User not authorized' });
+    let proofData = { text: req.body.text, type: req.body.type };
     if (req.file) {
-      // If a file was uploaded, create the permanent URL
-      // NOTE: Replace 'http://localhost:5000' with your actual production URL later
       proofData.url = `http://localhost:5000/uploads/${req.file.filename}`;
-      proofData.type = 'file'; // Ensure type is file
+      proofData.type = 'file'; 
     } else {
-      // If it's just a text link
       proofData.url = req.body.url;
     }
-    // -----------------
-
     skill.proofs.push(proofData); 
     await skill.save();
     res.json(skill);
@@ -216,26 +197,14 @@ exports.addProof = async (req, res) => {
   }
 };
 
-// DELETE /api/candidate/skills/:skillId/proof/:proofId
 exports.deleteProof = async (req, res) => {
   try {
     if (!ensureCandidateRole(req, res)) return;
     const userId = getSafeUserId(req);
-
     const skill = await Skill.findById(req.params.skillId);
     if (!skill) return res.status(404).json({ msg: 'Skill not found' });
-
-    // Verify ownership
-    if (skill.user.toString() !== userId.toString()) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
-    // Filter out the proof with the matching _id
-    // Mongoose automatically adds _id to subdocuments in an array
-    skill.proofs = skill.proofs.filter(
-      (proof) => proof._id.toString() !== req.params.proofId
-    );
-
+    if (skill.user.toString() !== userId.toString()) return res.status(401).json({ msg: 'User not authorized' });
+    skill.proofs = skill.proofs.filter((proof) => proof._id.toString() !== req.params.proofId);
     await skill.save();
     res.json(skill);
   } catch (err) {

@@ -102,6 +102,10 @@ const Shortlist = () => {
     // Helper to filter items
     const getItemsByStatus = (status) => items.filter(i => (i.status || 'saved') === status);
 
+    // In client/src/pages/Shortlist.jsx
+
+    // In client/src/pages/Shortlist.jsx
+
     const KanbanColumn = ({ title, status, colorClass }) => (
         <div className={`kanban-column ${colorClass}`}>
             <div className="column-header">
@@ -110,55 +114,59 @@ const Shortlist = () => {
             </div>
             
             <div className="cards-container">
-                {getItemsByStatus(status).map(item => (
-                    <div key={item._id} className="kanban-card">
-                        <div style={{fontWeight:'bold', fontSize:'1rem'}}>
-                            {item.candidate?.user?.fullName || 'Unknown Candidate'}
-                        </div>
-                        <div style={{fontSize:'0.85rem', color:'gray', marginBottom:'0.5rem'}}>
-                            {item.candidate?.headline || 'Candidate'}
-                        </div>
-                        
-                        {item.job && (
-                            <div style={{fontSize:'0.75rem', background:'#f0f0f0', padding:'2px 6px', borderRadius:'4px', display:'inline-block', marginBottom:'0.5rem'}}>
-                                <i className="fas fa-briefcase"></i> {item.job.title}
+                {getItemsByStatus(status).map(item => {
+                    // SAFE DATA ACCESS
+                    const candidateName = item.candidate?.user?.fullName || item.candidate?.user?.email || 'Candidate';
+                    const headline = item.candidate?.headline || 'No headline';
+                    const jobTitle = item.job?.title || 'General Shortlist';
+
+                    return (
+                        <div key={item._id} className="kanban-card">
+                            <div style={{fontWeight:'bold', fontSize:'1rem', color: '#333'}}>
+                                {candidateName}
                             </div>
-                        )}
-                        
-                        <div className="card-actions">
-                            <select 
-                                value={item.status || 'saved'} 
-                                onChange={(e) => updateStatus(item._id, e.target.value)}
-                                style={{padding:'2px', fontSize:'0.85rem'}}
-                            >
-                                <option value="saved">Saved</option>
-                                <option value="interviewing">Interview</option>
-                                <option value="offer">Offer</option>
-                                <option value="rejected">Reject</option>
-                            </select>
+                            <div style={{fontSize:'0.85rem', color:'gray', marginBottom:'0.5rem'}}>
+                                {headline}
+                            </div>
                             
-                            <div style={{display:'flex', gap:'10px'}}>
-                                {/* Email Button */}
-                                <button 
-                                    className="move-btn" 
-                                    title="Send Email"
-                                    onClick={() => contactCandidate(item.candidate._id, item._id)}
+                            <div style={{fontSize:'0.75rem', background:'#f0f0f0', padding:'2px 6px', borderRadius:'4px', display:'inline-block', marginBottom:'0.5rem'}}>
+                                <i className="fas fa-briefcase"></i> {jobTitle}
+                            </div>
+                            
+                            <div className="card-actions">
+                                <select 
+                                    value={item.status || 'saved'} 
+                                    onChange={(e) => updateStatus(item._id, e.target.value)}
+                                    style={{padding:'2px', fontSize:'0.85rem'}}
                                 >
-                                    <i className="fas fa-envelope"></i>
-                                </button>
+                                    <option value="saved">Saved</option>
+                                    <option value="emailed">Emailed</option>
+                                    <option value="interviewing">Interview</option>
+                                    <option value="offer">Offer</option>
+                                    <option value="rejected">Reject</option>
+                                </select>
                                 
-                                {/* Delete Button */}
-                                <button 
-                                    className="delete-btn" 
-                                    title="Remove"
-                                    onClick={() => deleteItem(item._id)}
-                                >
-                                    <i className="fas fa-trash"></i>
-                                </button>
+                                <div style={{display:'flex', gap:'10px'}}>
+                                    <button 
+                                        className="move-btn" 
+                                        title="Send Email"
+                                        onClick={() => contactCandidate(item.candidate?._id, item._id)} // Safe access
+                                    >
+                                        <i className="fas fa-envelope"></i>
+                                    </button>
+                                    
+                                    <button 
+                                        className="delete-btn" 
+                                        title="Remove"
+                                        onClick={() => deleteItem(item._id)}
+                                    >
+                                        <i className="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
@@ -167,10 +175,22 @@ const Shortlist = () => {
         <Layout title="Pipeline" user={user}>
             {loading && <div style={{textAlign:'center', marginTop:'1rem'}}>Loading pipeline...</div>}
             
-            <div className="kanban-board" style={{marginTop:'2rem'}}>
+            {/* Added overflowX to allow scrolling if columns get too wide */}
+            <div className="kanban-board" style={{marginTop:'2rem', overflowX: 'auto'}}>
+                
+                {/* 1. Saved Column */}
                 <KanbanColumn title="Saved" status="saved" colorClass="col-saved" />
+
+                {/* 2. NEW Emailed Column */}
+                <KanbanColumn title="Emailed" status="emailed" colorClass="col-emailed" />
+
+                {/* 3. Interviewing Column */}
                 <KanbanColumn title="Interviewing" status="interviewing" colorClass="col-interviewing" />
+
+                {/* 4. Offer Column */}
                 <KanbanColumn title="Offer Sent" status="offer" colorClass="col-offer" />
+
+                {/* 5. Rejected Column */}
                 <KanbanColumn title="Rejected" status="rejected" colorClass="col-rejected" />
             </div>
         </Layout>

@@ -8,30 +8,26 @@ const ShortlistSchema = new mongoose.Schema({
   },
   candidate: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'CandidateProfile', // Links to the candidate's data
+    ref: 'CandidateProfile',
     required: true
   },
   job: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job', // Optional: links the save to a specific job post
-    required: false
+    ref: 'Job',
+    default: null
   },
   status: {
     type: String,
-    enum: ['saved', 'interviewing', 'offer', 'rejected'],
+    enum: ['saved', 'emailed', 'interviewing', 'offer', 'rejected'], // <--- ADD 'emailed' HERE
     default: 'saved'
   },
   note: {
-    type: String,
-    default: ''
+    type: String
   },
-  createdAt: {
+  dateAdded: {
     type: Date,
     default: Date.now
   }
 });
-
-// Ensure a recruiter can't save the same candidate twice for the same job
-ShortlistSchema.index({ recruiter: 1, candidate: 1, job: 1 }, { unique: true });
 
 module.exports = mongoose.model('Shortlist', ShortlistSchema);

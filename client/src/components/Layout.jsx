@@ -30,9 +30,10 @@ const Layout = ({ children, title, user }) => {
                 <nav style={{ listStyle: 'none' }}>
                     <SidebarLink to="/dashboard" icon="fas fa-chart-line" text="Dashboard" active={isActive('/dashboard')} />
                     <SidebarLink to="/post-job" icon="fas fa-briefcase" text="Post a Job" active={isActive('/post-job')} />
-                    <SidebarLink to="/job-portal" icon="fas fa-globe" text="Job Portal (Public)" active={isActive('/job-portal')} />
                     
-                    {/* --- ADDED SHORTLIST LINK HERE --- */}
+                    {/* ✅ FIX: Changed link from /job-portal to /jobs */}
+                    <SidebarLink to="/jobs" icon="fas fa-globe" text="Job Portal (Public)" active={isActive('/jobs')} />
+                    
                     <SidebarLink to="/shortlist" icon="fas fa-bookmark" text="Shortlisted" active={isActive('/shortlist')} />
                     
                     <SidebarLink to="/sourcing" icon="fa-solid fa-magnifying-glass" text="Sourcing" active={isActive('/sourcing')} />

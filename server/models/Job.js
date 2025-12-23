@@ -6,30 +6,35 @@ const JobSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  company: { type: String, default: 'Confidential' },
   title: { type: String, required: true },
   description: { type: String, required: true },
   
-  // New Fields matching your HTML form
-  jobType: { type: String, default: 'Full-Time' }, // Full-Time, Contract, etc.
+  // --- NEW STATUS FIELD ---
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'closed'],
+    default: 'draft' // <--- Key Fix: All jobs start as Drafts (Hidden)
+  },
+
+  // Existing fields...
+  jobType: { type: String, default: 'Full-Time' },
   experienceLevel: { type: String, default: 'Mid Level' },
-  locationType: { type: String, default: 'Remote' }, // On-Site, Hybrid, Remote
-  location: { type: String }, // "City, Country"
+  locationType: { type: String, default: 'Remote' },
+  location: { type: String },
   salary: {
     min: { type: Number },
     max: { type: Number }
   },
-  benefits: [{ type: String }], // Array of strings
+  benefits: [{ type: String }],
   responsibilities: { type: String },
   
-  // Skills
   skills: [{ type: String }],
   niceToHaveSkills: [{ type: String }], 
   
-  // Legacy/Backup fields
   rawText: { type: String },
   extractedSkills: [{ type: String }],
 
-  // --- ADD THIS SECTION HERE ---
   applicants: [{
       candidate: { 
           type: mongoose.Schema.Types.ObjectId, 

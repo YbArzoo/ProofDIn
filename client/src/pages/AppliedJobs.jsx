@@ -43,7 +43,7 @@ const AppliedJobs = () => {
             {/* SIDEBAR (Same as Dashboard) */}
             <aside className="sidebar">
                 <div className="sidebar-logo">
-                    <div className="sidebar-logo-icon"></div>
+                    <div className="sidebar-logo-icon"><i className="fas fa-search-check"></i></div>
                     <div className="sidebar-logo-text">ProofdIn</div>
                 </div>
                 <ul className="sidebar-menu">
@@ -53,8 +53,9 @@ const AppliedJobs = () => {
                     {/* ACTIVE TAB */}
                     <li className="active"><Link to="/applied-jobs" style={{color: 'var(--primary)'}}><i className="fas fa-check-circle"></i> Applied Jobs</Link></li>
                     
-                    <li><a href="/candidate-dashboard#tailored-resume"><i className="fas fa-file-pdf"></i> Tailored Resumes</a></li>
+                    <li><Link to="/tailored-resumes"><i className="fas fa-file-pdf"></i> Tailored Resumes</Link></li>
                     <li><Link to="/skills"><i className="fas fa-th-large"></i> Skills Grid</Link></li>
+                    <li><Link to="/candidate-profile"><i className="fas fa-user-circle"></i> My Profile</Link></li>
                 </ul>
             </aside>
 
@@ -62,11 +63,15 @@ const AppliedJobs = () => {
             <header className="dashboard-header">
                 <nav className="dashboard-nav">
                     <div className="user-menu">
-                        <div className="avatar">{user.avatar}</div>
-                        <div className="user-info-text">
+                        {/* FIX 1: Prevent Avatar Squash */}
+                        <div className="avatar" style={{ flexShrink: 0 }}>{user.avatar}</div>
+                        
+                        {/* FIX 2: Prevent Text Wrapping (Squashing) */}
+                        <div className="user-info-text" style={{ whiteSpace: 'nowrap' }}>
                             <div className="name">{user.fullName || user.name}</div>
                             <div className="role">Candidate</div>
                         </div>
+                        
                         <button onClick={handleLogout} className="btn btn-primary" style={{ marginLeft: '10px' }}>Logout</button>
                     </div>
                 </nav>
@@ -105,9 +110,17 @@ const AppliedJobs = () => {
                                                 <td style={{padding:'1rem', fontWeight:'600'}}>{job.title}</td>
                                                 <td style={{padding:'1rem'}}>{job.company}</td>
                                                 <td style={{padding:'1rem'}}>{job.locationType}</td>
+                                                
+                                                {/* FIX 3: Added Time alongside Date */}
                                                 <td style={{padding:'1rem'}}>
-                                                    {new Date(job.myAppliedDate).toLocaleDateString()}
+                                                    <div style={{fontWeight:'500'}}>
+                                                        {new Date(job.myAppliedDate).toLocaleDateString()}
+                                                    </div>
+                                                    <div style={{fontSize:'0.85rem', color:'#888'}}>
+                                                        {new Date(job.myAppliedDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    </div>
                                                 </td>
+                                                
                                                 <td style={{padding:'1rem'}}>
                                                     {/* DYNAMIC STATUS BADGE */}
                                                     <span style={{

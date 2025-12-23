@@ -259,7 +259,7 @@ const Skills = () => {
         <div className="sidebar-logo"><div className="sidebar-logo-icon"><i className="fas fa-search-check"></i></div><div className="sidebar-logo-text">ProofdIn</div></div>
         <ul className="sidebar-menu">
             <li><Link to="/candidate-dashboard"><i className="fas fa-tachometer-alt"></i> Dashboard</Link></li>
-            <li><a href="/candidate-dashboard#tailored-resume"><i className="fas fa-file-pdf"></i> Tailored Resumes</a></li>
+            <li><Link to="/tailored-resumes"><i className="fas fa-file-pdf"></i> Tailored Resumes</Link></li>
             <li><Link to="/skills" className="active"><i className="fas fa-th-large"></i> Skills Grid</Link></li>
             <li><a href="/candidate-dashboard#skill-proof"><i className="fas fa-link"></i> Skill Proof</a></li>
             <li><a href="/candidate-dashboard#skill-gaps"><i className="fas fa-chart-line"></i> Skill Gaps</a></li>

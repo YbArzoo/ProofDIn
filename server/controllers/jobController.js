@@ -1,6 +1,7 @@
 const Job = require('../models/Job');
 const CandidateProfile = require('../models/CandidateProfile');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const RecruiterProfile = require('../models/RecruiterProfile');
 
 // --- 1. LOCAL DICTIONARY (THE SAFETY NET) ---
 const SKILL_DICTIONARY = ['React', 'TypeScript', 'JavaScript', 'Redux', 'RTK', 'Jest', 'Cypress', 'GraphQL', 'Node.js', 'Web Performance', 'REST APIs', 'Next.js', 'AWS', 'Golang', 'Python', 'Java', 'SQL', 'MongoDB', 'Docker', 'Kubernetes', 'Git'];
@@ -68,24 +69,29 @@ exports.analyzeJob = async (req, res) => {
           description, title, jobType, experienceLevel, 
           locationType, location, salaryMin, salaryMax, 
           benefits, responsibilities, manualSkills,
-          niceToHaveSkills // <--- 1. ADD THIS HERE
+          niceToHaveSkills,
+          status 
       } = req.body;
   
       const recruiterId = req.user.userId || req.user.id || req.user._id;
       if (!recruiterId) return res.status(401).json({ message: 'Unauthorized' });
+
+      // --- NEW FIX: Fetch Company Name ---
+      const profile = await RecruiterProfile.findOne({ user: recruiterId });
+      const companyName = profile ? profile.orgName : 'Hiring Company';
+      // -----------------------------------
   
-      // 1. AI Extraction (Hybrid)
+      // 1. AI Extraction (Keep your existing code)
       let aiSkills = await extractSkillsWithAI(description);
       if (!aiSkills || aiSkills.length === 0) {
           aiSkills = extractSkillsRegex(description);
       }
-  
-      // Combine AI skills with manually entered skills (if any)
       const finalSkills = Array.from(new Set([...aiSkills, ...(manualSkills || [])]));
   
-      // 2. Create Job with ALL fields
+      // 2. Create Job (Now with Company Name)
       const job = await Job.create({
         recruiter: recruiterId,
+        company: companyName, // <--- SAVING IT HERE
         title: title || 'Untitled Job',
         description,
         jobType,
@@ -96,15 +102,17 @@ exports.analyzeJob = async (req, res) => {
         benefits,
         responsibilities,
         skills: finalSkills,
-        niceToHaveSkills: niceToHaveSkills, // <--- 2. ADD THIS HERE
+        niceToHaveSkills: niceToHaveSkills,
         rawText: description,
-        extractedSkills: finalSkills
+        extractedSkills: finalSkills,
+        status: status || 'draft'
       });
   
       res.json({
-        message: 'Job posted successfully',
+        message: 'Job processed successfully',
         skills: finalSkills,
-        jobId: job._id
+        jobId: job._id,
+        status: job.status
       });
   
     } catch (err) {
@@ -181,16 +189,46 @@ exports.matchCandidates = async (req, res) => {
 
 // Keep CRUD functions
 exports.getAllJobs = async (req, res) => {
-  try {
-    const jobs = await Job.find().sort({ createdAt: -1 }).populate('recruiter', 'orgName'); 
-    res.status(200).json(jobs);
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+    try {
+        // 1. Find all published jobs
+        const jobs = await Job.find({ status: 'published' })
+            .sort({ createdAt: -1 })
+            .lean(); // Use lean() for better performance
+
+        // 2. Enhance jobs with Company Name from RecruiterProfile
+        // We have to map over them because 'recruiter' field in Job points to User, 
+        // but 'orgName' is in RecruiterProfile.
+        const enhancedJobs = await Promise.all(jobs.map(async (job) => {
+            const profile = await RecruiterProfile.findOne({ user: job.recruiter });
+            return {
+                ...job,
+                // If profile exists, use its orgName. Otherwise fallback to User's name or Default.
+                recruiter: {
+                    ...job.recruiter,
+                    orgName: profile ? profile.orgName : 'Hiring Company'
+                }
+            };
+        }));
+
+        res.status(200).json(enhancedJobs);
+    } catch (err) {
+        console.error("Get All Jobs Error:", err);
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
+// @desc    Get MY jobs (Recruiter Dashboard)
+// @route   GET /api/jobs/my-jobs
 exports.getMyJobs = async (req, res) => {
     try {
       const recruiterId = req.user.userId || req.user.id || req.user._id;
-      const jobs = await Job.find({ recruiter: recruiterId }).sort({ createdAt: -1 });
+      
+      // FIX: Filter out 'draft' status so "Analysis" files don't clutter the dashboard
+      const jobs = await Job.find({ 
+          recruiter: recruiterId, 
+          status: { $ne: 'draft' } 
+      }).sort({ createdAt: -1 });
+
       res.json(jobs);
     } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
@@ -400,5 +438,76 @@ exports.getAppliedJobs = async (req, res) => {
     } catch (err) {
         console.error("Get Applied Jobs Error:", err);
         res.status(500).json({ message: 'Server Error fetching applied jobs' });
+    }
+};
+
+// ... existing code ...
+
+// @desc    Get all applicants for a specific job (Recruiter Only)
+// @route   GET /api/jobs/:id/applicants
+exports.getJobApplicants = async (req, res) => {
+    try {
+        const jobId = req.params.id;
+        const recruiterId = req.user.userId || req.user.id || req.user._id;
+
+        // 1. Find Job & Verify Ownership
+        const job = await Job.findOne({ _id: jobId, recruiter: recruiterId });
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found or unauthorized' });
+        }
+
+        // 2. Get list of applicant User IDs
+        // Filter out any corrupt data where candidate ID might be missing
+        const validApps = job.applicants.filter(app => app.candidate);
+        const candidateIds = validApps.map(app => app.candidate);
+
+        // 3. Fetch Profiles for these Candidates
+        const profiles = await CandidateProfile.find({ user: { $in: candidateIds } })
+            .populate('user', 'fullName email');
+
+        // 4. Merge Data (Profile + Application Status)
+        const results = validApps.map(app => {
+            // Find the profile matching this applicant's User ID
+            const profile = profiles.find(p => p.user._id.toString() === app.candidate.toString());
+            
+            if (!profile) return null; // Skip if profile deleted/not found
+
+            // Calculate a basic Match Score (Simple overlap of skills)
+            // Job Skills are Strings ["React", "Node"], Profile Skills are Objects [{name:"React"}, ...]
+            const jobSkillsLower = job.skills.map(s => s.toLowerCase());
+            const candSkillsLower = (profile.skills || []).map(s => (s.name || s).toLowerCase());
+            
+            const matchCount = jobSkillsLower.filter(s => 
+                candSkillsLower.some(cs => cs.includes(s) || s.includes(cs))
+            ).length;
+            
+            const matchScore = job.skills.length > 0 
+                ? Math.round((matchCount / job.skills.length) * 100) 
+                : 0;
+
+            return {
+                _id: app._id, // Application ID
+                candidateId: profile.user._id,
+                name: profile.user.fullName,
+                email: profile.user.email,
+                headline: profile.headline || 'Candidate',
+                location: profile.location || 'Remote',
+                experience: `${profile.experienceYears || 0} Years`,
+                skills: profile.skills.map(s => s.name || s).slice(0, 5), // Top 5 skills
+                status: app.status, // 'Applied', 'Interviewing', etc.
+                appliedAt: app.appliedAt,
+                matchScore: matchScore,
+                photoUrl: profile.photoUrl
+            };
+        }).filter(Boolean); // Remove nulls
+
+        // Sort by Match Score (Highest first)
+        results.sort((a, b) => b.matchScore - a.matchScore);
+
+        res.json(results);
+
+    } catch (err) {
+        console.error("Get Applicants Error:", err);
+        res.status(500).json({ message: 'Server Error fetching applicants' });
     }
 };

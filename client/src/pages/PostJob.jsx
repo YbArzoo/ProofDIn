@@ -160,6 +160,9 @@ const PostJob = () => {
     };
 
     // --- SUBMIT ---
+    // ... existing imports and state ...
+
+    // --- SUBMIT ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -176,21 +179,22 @@ const PostJob = () => {
             responsibilities: formData.responsibilities,
             benefits: formData.benefits,
             manualSkills: manualSkills,
-            niceToHaveSkills: niceToHaveSkills
+            niceToHaveSkills: niceToHaveSkills,
+            status: 'published' // <--- FIX: Explicitly Publish!
         };
 
         try {
             const token = localStorage.getItem('token');
             const url = isEditMode 
                 ? `http://localhost:5000/api/jobs/${jobId}`
-                : `http://localhost:5000/api/jobs/analyze`; // Note: Your backend uses /analyze for Create logic
+                : `http://localhost:5000/api/jobs/analyze`; // Calls the create endpoint
             
             const method = isEditMode ? 'put' : 'post';
 
             await axios[method](url, payload, { headers: { 'x-auth-token': token } });
             
             alert(isEditMode ? "Job Updated!" : "Job Posted Successfully!");
-            navigate('/my-jobs'); // Redirect to list
+            navigate('/my-jobs'); 
 
         } catch (err) {
             console.error(err);
@@ -198,6 +202,8 @@ const PostJob = () => {
         }
         setLoading(false);
     };
+
+    // ... Return JSX remains the same ...
 
     return (
         <Layout title={isEditMode ? "Edit Job" : "Post a Job"} user={user}>

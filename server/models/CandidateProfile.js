@@ -53,6 +53,9 @@ const candidateProfileSchema = new mongoose.Schema(
     headline: String,
     summary: String,
     photoUrl: String,
+    
+    // ✅ ADDED PHONE FIELD HERE
+    phone: String, 
 
     // Extra fields useful for recruiters
     experienceYears: Number,

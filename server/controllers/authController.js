@@ -64,10 +64,12 @@ exports.signup = async (req, res) => {
         user: user._id,
         headline: 'Aspiring Professional',
         location: '',
-        education: [],
-        experience: [],
-        skills: [],
-        socialLinks: {}
+        
+        // --- FIXED SECTIONS ---
+        education: '',   // Fixed: Must be a String, not []
+        skills: [],      // This is correct (Schema says [skillSchema])
+        socialLinks: []  // Fixed: Must be an Array, not {}
+        // experience: [] // Removed: This field does not exist in your Schema
       });
     }
 
@@ -76,7 +78,6 @@ exports.signup = async (req, res) => {
       res.status(201).json({
         message: 'Signup successful',
         token: createToken(user),
-        // We wrap this in a 'user' object so the frontend script (data.user.role) works
         user: {
             id: user._id,
             fullName: user.fullName,

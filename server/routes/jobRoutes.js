@@ -11,6 +11,7 @@ const {
     updateJob,
     parseJobDescription,
     applyForJob,
+    getJobApplicants,
     getAppliedJobs
 } = require('../controllers/jobController');
 
@@ -35,5 +36,8 @@ router.post('/:id/apply', auth, applyForJob);
 router.get('/:id', auth, getJob); // <--- This catches everything else
 router.put('/:id', auth, updateJob);
 router.delete('/:id', auth, deleteJob);
+
+// ✅ ADD THIS NEW ROUTE
+router.get('/:id/applicants', auth, getJobApplicants);
 
 module.exports = router;

@@ -33,7 +33,8 @@ const Home = () => {
                         <li onClick={() => scrollToSection('home')}>Home</li>
                         <li onClick={() => scrollToSection('features')}>Features</li>
                         <li onClick={() => scrollToSection('how-it-works')}>How It Works</li>
-                        <li onClick={() => navigate('/job-portal')}>Jobs</li>
+                        {/* ✅ FIX: Updated route to /jobs */}
+                        <li onClick={() => navigate('/jobs')}>Jobs</li>
                     </ul>
 
                     <div className="auth-buttons">

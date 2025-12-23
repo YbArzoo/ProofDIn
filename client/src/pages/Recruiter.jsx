@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import '../styles/Recruiter.css';
 
 const Recruiter = () => {
+    // 1. STATE
     const [user, setUser] = useState(null);
     const [jobDescription, setJobDescription] = useState('');
     const [extractedSkills, setExtractedSkills] = useState([]);
@@ -13,6 +14,7 @@ const Recruiter = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [shortlistIds, setShortlistIds] = useState([]);
 
+    // 2. INITIAL LOAD
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser) setUser(storedUser);
@@ -25,12 +27,14 @@ const Recruiter = () => {
             const res = await axios.get('http://localhost:5000/api/shortlist', {
                 headers: { 'x-auth-token': token }
             });
+            // Assuming the API returns an array of objects populated with 'candidate'
             setShortlistIds(res.data.map(item => item.candidate._id));
         } catch (err) {
             console.error("Error fetching shortlist", err);
         }
     };
 
+    // 3. ACTIONS
     const analyzeJob = async () => {
         if (!jobDescription.trim()) return alert("Paste a JD first!");
         setLoading(true);
@@ -44,7 +48,7 @@ const Recruiter = () => {
             setExtractedSkills(res.data.skills || []);
             setCurrentJobId(res.data.jobId);
             
-            // Auto-trigger search
+            // Auto-trigger search once analysis is done
             await performSearch(res.data.jobId);
 
         } catch (err) {
@@ -78,7 +82,7 @@ const Recruiter = () => {
                 { candidateId, jobId: currentJobId, status: 'saved' },
                 { headers: { 'x-auth-token': token } }
             );
-            setShortlistIds(prev => [...prev, candidateId]); // Update local state
+            setShortlistIds(prev => [...prev, candidateId]); // Update UI instantly
         } catch (err) {
             alert(err.response?.data?.message || "Error saving");
         }
@@ -96,15 +100,18 @@ const Recruiter = () => {
             );
             
             if(res.data.previewUrl) {
-                if(confirm("Email sent! View simulated email?")) {
+                if(window.confirm("Email sent! View simulated email?")) {
                     window.open(res.data.previewUrl, '_blank');
                 }
+            } else {
+                alert("Email sent successfully!");
             }
         } catch (err) {
             alert("Failed to send email");
         }
     };
 
+    // 4. RENDER
     return (
         <Layout title="Dashboard" user={user}>
             {/* JOB POST INPUT */}
@@ -145,7 +152,7 @@ const Recruiter = () => {
                         <i className="fas fa-search"></i>
                         <input 
                             type="text" 
-                            placeholder="Search in plain English..." 
+                            placeholder="Search in plain English (e.g., 'React developer with 3 years exp')" 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -158,7 +165,7 @@ const Recruiter = () => {
             <section>
                 <h3>Matches ({candidates.length})</h3>
                 <div className="candidates-grid">
-                    {candidates.map((c, i) => (
+                    {candidates.map((c) => (
                         <div key={c.id} className="candidate-card">
                             <div className="candidate-header">
                                 <div className="candidate-anonymous"><i className="fas fa-user"></i></div>

@@ -28,6 +28,24 @@ const JobSchema = new mongoose.Schema({
   // Legacy/Backup fields
   rawText: { type: String },
   extractedSkills: [{ type: String }],
+
+  // --- ADD THIS SECTION HERE ---
+  applicants: [{
+      candidate: { 
+          type: mongoose.Schema.Types.ObjectId, 
+          ref: 'User',
+          required: true
+      },
+      status: { 
+          type: String, 
+          enum: ['Applied', 'Under Review', 'Interviewing', 'Selected', 'Rejected'], 
+          default: 'Applied' 
+      },
+      appliedAt: { 
+          type: Date, 
+          default: Date.now 
+      }
+  }],
   
   createdAt: { type: Date, default: Date.now }
 });

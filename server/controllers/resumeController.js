@@ -2,13 +2,13 @@
 const Groq = require('groq-sdk');
 const CandidateProfile = require('../models/CandidateProfile');
 const User = require('../models/User'); 
+const Resume = require('../models/Resume'); 
 
-// Initialize Groq Client
-// Ensure GROQ_API_KEY is in your .env file
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY, 
 });
 
+// 1. GENERATE & SAVE RESUME
 exports.generateTailoredResume = async (req, res) => {
     try {
         const { jobDescriptionText } = req.body;
@@ -17,10 +17,7 @@ exports.generateTailoredResume = async (req, res) => {
             return res.status(400).json({ message: 'Job Description text is required' });
         }
 
-        // 1. Fetch Candidate Data
-        // req.user.userId comes from your authMiddleware
         const userId = req.user.userId || req.user.id;
-        
         const candidateProfile = await CandidateProfile.findOne({ user: userId });
         const userDetails = await User.findById(userId).select('-password');
 
@@ -28,8 +25,6 @@ exports.generateTailoredResume = async (req, res) => {
             return res.status(404).json({ message: 'Candidate profile not found' });
         }
 
-        // 2. Format Data for AI
-        // Handle cases where skills might be empty
         const skillsList = candidateProfile.skills && candidateProfile.skills.length > 0 
             ? candidateProfile.skills.map(s => `${s.name} (${s.level})`).join(', ')
             : "No specific skills listed";
@@ -42,9 +37,8 @@ exports.generateTailoredResume = async (req, res) => {
             Bio: ${candidateProfile.summary || "Not specified"}
         `;
 
-        console.log("Generating resume with Groq (Llama 3)...");
+        console.log("Generating resume with Groq...");
 
-        // 3. Call Groq API (Llama 3 model)
         const chatCompletion = await groq.chat.completions.create({
             "messages": [
                 {
@@ -53,31 +47,85 @@ exports.generateTailoredResume = async (req, res) => {
                 },
                 {
                     "role": "user",
-                    "content": `
-                    CANDIDATE INFO:
-                    ${candidateContext}
-
-                    TARGET JOB DESCRIPTION:
-                    ${jobDescriptionText}
-
-                    Write the tailored resume now.`
+                    "content": `CANDIDATE INFO:\n${candidateContext}\n\nTARGET JOB DESCRIPTION:\n${jobDescriptionText}\n\nWrite the tailored resume now.`
                 }
             ],
             "model": "llama-3.3-70b-versatile",
             "temperature": 0.6,
-            "max_completion_tokens": 3000,
-            "top_p": 1,
-            "stream": false,
-            "stop": null
+            "max_completion_tokens": 3000
         });
 
-        // 4. Send Response
         const generatedText = chatCompletion.choices[0]?.message?.content || "";
-        res.json({ resumeContent: generatedText });
+
+        // --- IMPROVED TITLE EXTRACTION ---
+        let jobTitle = "Tailored Role";
+        let companyName = "Target Company";
+
+        // 1. Extract Company (looks for "at Company", "for Company")
+        const companyMatch = jobDescriptionText.match(/(?:at|for|company)\s+([A-Z][a-z0-9]+(?:\s[A-Z][a-z0-9]+)*)/);
+        if (companyMatch) companyName = companyMatch[1];
+
+        // 2. Extract Job Title (Smarter Logic)
+        // First, check for explicit labels like "Role:" or "Hiring"
+        const roleRegex = /(?:role|position|hiring|looking for)[:\s]+(.*?)(?:\n|$|\.|with|for)/i;
+        const roleMatch = jobDescriptionText.match(roleRegex);
+
+        if (roleMatch && roleMatch[1].length < 50) {
+            jobTitle = roleMatch[1].trim();
+        } else {
+            // Fallback: Take the first line, but stop at common separators ("with", "at", "for", ",")
+            // Example: "Senior Dev with 5 years..." -> "Senior Dev"
+            const firstLine = jobDescriptionText.split('\n')[0];
+            const cleanTitle = firstLine.split(/(?:with|at|for|\||,|\()/i)[0].trim();
+            
+            if (cleanTitle.length > 0 && cleanTitle.length < 50) {
+                jobTitle = cleanTitle;
+            } else {
+                // If still too long, just take the first 4 words
+                jobTitle = cleanTitle.split(' ').slice(0, 4).join(' ');
+            }
+        }
+        
+        // Remove any special characters from the title to make it clean
+        jobTitle = jobTitle.replace(/[^\w\s\-\.]/g, '').trim();
+
+        // --- SAVE TO DB ---
+        const newResume = new Resume({
+            user: userId,
+            content: generatedText,
+            companyName: companyName,
+            jobTitle: jobTitle,
+            // ADD THIS LINE BELOW:
+            jobDescriptionText: jobDescriptionText 
+        });
+
+        await newResume.save();
+        console.log(`✅ Resume saved: "${jobTitle}" for "${companyName}"`);
+
+        res.json({ 
+            resumeContent: generatedText,
+            companyName,
+            jobTitle,
+            id: newResume._id 
+        });
 
     } catch (err) {
         console.error('AI Resume Gen Error:', err.message);
-        // If API key is missing or invalid, sending a clear error helps debugging
         res.status(500).json({ message: 'Server Error during AI generation', error: err.message });
+    }
+};
+
+// 2. FETCH RESUME HISTORY
+exports.getResumeHistory = async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id;
+        const resumes = await Resume.find({ user: userId })
+            .sort({ createdAt: -1 })
+            .select('companyName jobTitle createdAt content'); 
+
+        res.json(resumes);
+    } catch (err) {
+        console.error('Fetch History Error:', err);
+        res.status(500).json({ message: 'Server Error fetching history' });
     }
 };

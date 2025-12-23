@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../styles/JobPortal.css'; 
+import '../styles/JobPortal.css';
 
 const JobPortal = () => {
+    // 1. STATE
     const [jobs, setJobs] = useState([]);
     const [filteredJobs, setFilteredJobs] = useState([]);
     const [search, setSearch] = useState('');
@@ -11,6 +12,7 @@ const JobPortal = () => {
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
+    // 2. LOAD DATA
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser) setUser(storedUser);
@@ -19,8 +21,7 @@ const JobPortal = () => {
 
     const fetchJobs = async () => {
         try {
-            // Note: Ensure your backend allows public access to this route
-            const res = await axios.get('http://localhost:5000/api/jobs'); 
+            const res = await axios.get('http://localhost:5000/api/jobs');
             setJobs(res.data);
             setFilteredJobs(res.data);
         } catch (err) {
@@ -28,6 +29,7 @@ const JobPortal = () => {
         }
     };
 
+    // 3. ACTIONS
     const handleSearch = () => {
         const term = search.toLowerCase();
         const results = jobs.filter(job => 
@@ -37,51 +39,83 @@ const JobPortal = () => {
         setFilteredJobs(results);
     };
 
+    const handleApply = async (jobId) => {
+        if (!user) return navigate('/'); // Force login if not authenticated
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`http://localhost:5000/api/jobs/${jobId}/apply`, {}, {
+                headers: { 'x-auth-token': token }
+            });
+
+            if (res.status === 200) {
+                alert("✅ Application Successful!");
+
+                // Update local state instantly
+                const updatedJobs = jobs.map(job => {
+                    if (job._id === jobId) {
+                        // Add current user ID to applicants array
+                        return { ...job, applicants: [...(job.applicants || []), user._id || user.id] };
+                    }
+                    return job;
+                });
+                
+                setJobs(updatedJobs);
+                setFilteredJobs(updatedJobs);
+                
+                // Update Modal if open
+                if (selectedJob && selectedJob._id === jobId) {
+                    setSelectedJob({ 
+                        ...selectedJob, 
+                        applicants: [...(selectedJob.applicants || []), user._id || user.id] 
+                    });
+                }
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Error applying to job");
+        }
+    };
+
     const handleLogout = () => {
         localStorage.clear();
         navigate('/');
     };
 
+    const hasApplied = (job) => {
+        if (!user || !job.applicants) return false;
+        const userId = user._id || user.id;
+        return job.applicants.some(app => {
+            if (typeof app === 'string') return app === userId;
+            return app.candidate === userId;
+        });
+    };
+
+    // 4. RENDER
     return (
         <div style={{minHeight:'100vh', background:'#f5f7fb'}}>
             
-            {/* --- HEADER (Restored to match HTML) --- */}
-            <header className="dashboard-header" style={{
-                background: '#fff', 
-                boxShadow: '0 2px 10px rgba(0,0,0,0.08)', 
-                position: 'sticky', top: 0, zIndex: 100
-            }}>
-                <nav style={{
-                    maxWidth: '1200px', margin: '0 auto', padding: '1rem 2rem', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                }}>
-                    {/* Logo */}
+            {/* HEADER */}
+            <header className="dashboard-header" style={{background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', position: 'sticky', top: 0, zIndex: 100}}>
+                <nav style={{maxWidth: '1200px', margin: '0 auto', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                     <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-                        <div style={{
-                            width: '42px', height: '42px', borderRadius: '8px', 
-                            background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', 
-                            display: 'grid', placeItems: 'center', color: '#fff', fontSize: '1.2rem'
-                        }}>
+                        <div style={{width: '42px', height: '42px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: '1.2rem'}}>
                             <i className="fas fa-bolt"></i>
                         </div>
                         <span style={{fontSize: '1.6rem', fontWeight: 800, color: 'var(--primary)'}}>ProofdIn</span>
                     </a>
 
-                    {/* Nav Actions */}
                     <div style={{display:'flex', gap:'0.8rem', alignItems:'center'}}>
                         {user ? (
                             <>
-                                {user.role === 'recruiter' && (
-                                    <button 
-                                        className="btn" 
-                                        style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--primary)'}}
-                                        onClick={() => navigate('/dashboard')}
-                                    >
-                                        Dashboard
-                                    </button>
-                                )}
+                                <button 
+                                    className="btn" 
+                                    style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--primary)'}}
+                                    onClick={() => navigate(user.role === 'recruiter' ? '/dashboard' : '/candidate-dashboard')}
+                                >
+                                    Dashboard
+                                </button>
                                 <div style={{width:40, height:40, borderRadius:'50%', background:'var(--primary)', color:'white', display:'grid', placeItems:'center', fontWeight:'bold'}}>
-                                    {user.fullName[0].toUpperCase()}
+                                    {(user.fullName || 'U')[0].toUpperCase()}
                                 </div>
                                 <button className="btn" style={{border:'1px solid #ddd'}} onClick={handleLogout}>Logout</button>
                             </>
@@ -146,6 +180,12 @@ const JobPortal = () => {
                                                     </div>
                                                 </div>
                                             </div>
+                                            {/* Applied Badge */}
+                                            {hasApplied(job) && (
+                                                <span style={{background:'#d4edda', color:'#155724', padding:'4px 8px', borderRadius:'12px', fontSize:'0.75rem', fontWeight:'bold'}}>
+                                                    <i className="fas fa-check"></i> Applied
+                                                </span>
+                                            )}
                                         </div>
                                         
                                         <div className="short-desc">
@@ -232,10 +272,21 @@ const JobPortal = () => {
                                 {(selectedJob.skills || []).map((s, i) => <span key={i} className="tag">{s}</span>)}
                             </div>
 
+                            {/* DYNAMIC ACTION BUTTON */}
                             <div className="job-actions">
-                                <button className="btn" style={{background:'var(--primary)', color:'white', padding:'0.8rem 2rem', fontSize:'1.1rem'}}>
-                                    Apply Now
-                                </button>
+                                {hasApplied(selectedJob) ? (
+                                    <button className="btn" style={{background:'#28a745', color:'white', padding:'0.8rem 2rem', fontSize:'1.1rem', cursor:'default'}} disabled>
+                                        <i className="fas fa-check"></i> Application Sent
+                                    </button>
+                                ) : (
+                                    <button 
+                                        className="btn" 
+                                        style={{background:'var(--primary)', color:'white', padding:'0.8rem 2rem', fontSize:'1.1rem'}}
+                                        onClick={() => handleApply(selectedJob._id)}
+                                    >
+                                        Apply Now
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

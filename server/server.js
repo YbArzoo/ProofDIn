@@ -58,9 +58,8 @@ app.post('/api/candidate/generate-resume', async (req, res) => {
         console.log("User Authenticated ID:", req.user.userId || req.user.id);
 
         await resumeController.generateTailoredResume(req, res);
-
     } catch (err) {
-        console.error("Auth/Route Error:", err.message);
+        console.error("Auth Error:", err.message);
         res.status(401).json({ message: 'Token is not valid' });
     }
 });

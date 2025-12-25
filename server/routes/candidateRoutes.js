@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/authMiddleware');
 const multer = require('multer'); // Import multer
 const path = require('path');
+const candidateController = require('../controllers/candidateController');
 
 // --- MULTER SETUP (File Upload Config) ---
 const storage = multer.diskStorage({
@@ -59,7 +60,12 @@ router.delete('/skills/:skillId/proof/:proofId', auth, deleteProof);
 
 // Resume Routes
 router.post('/generate-resume', auth, resumeController.generateTailoredResume); 
-router.get('/resumes', auth, resumeController.getResumeHistory);                
+router.get('/resumes', auth, resumeController.getResumeHistory); 
+
+
+// Add this line with your other GET routes
+// It uses :id so we can look up specific candidates
+router.get('/portfolio-view/:id', auth, candidateController.getCandidatePublicPortfolio);
 
 // Manual Resume Routes (Keep existing)
 // 1. Update Resume Title

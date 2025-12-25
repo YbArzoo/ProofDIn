@@ -54,6 +54,18 @@ const candidateProfileSchema = new mongoose.Schema(
     summary: String,
     photoUrl: String,
     
+    // ✅ ADD THIS NEW PORTFOLIO CONFIGURATION OBJECT:
+    portfolio: { 
+      theme: { type: String, default: 'modern' },
+      showPhoto: { type: Boolean, default: true },
+      showContact: { type: Boolean, default: true },
+      showBio: { type: Boolean, default: true },
+      showExperience: { type: Boolean, default: true },
+      showEducation: { type: Boolean, default: true },
+      showSkills: { type: Boolean, default: true },
+      customTitle: { type: String, default: 'My Portfolio' }
+    },
+
     // ✅ ADDED PHONE FIELD HERE
     phone: String, 
 
@@ -67,7 +79,7 @@ const candidateProfileSchema = new mongoose.Schema(
 
     // Global links / CV
     socialLinks: [socialLinkSchema],
-    cvUrl: String,     // URL to uploaded CV (for now we treat it as a link)
+    cvUrl: String,     // URL to uploaded CV
   },
   { timestamps: true }
 );

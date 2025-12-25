@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import CandidateSidebar from '../components/CandidateSidebar'; // ✅ IMPORT
 import '../styles/Skills.css'; 
 
 const Skills = () => {
@@ -15,7 +16,7 @@ const Skills = () => {
     lastUsed: new Date().toISOString().slice(0, 7)
   });
 
-  // 3. Edit Skill Form State (NEW)
+  // 3. Edit Skill Form State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSkill, setEditingSkill] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -113,7 +114,7 @@ const Skills = () => {
     }
   };
 
-  // --- NEW: EDIT HANDLERS ---
+  // --- EDIT HANDLERS ---
   const handleEditClick = (skill) => {
     setEditingSkill(skill);
     setEditForm({
@@ -136,7 +137,6 @@ const Skills = () => {
 
       if (res.ok) {
         const updatedSkill = await res.json();
-        // Update the list with the new data
         setSkills(skills.map(s => s._id === editingSkill._id ? updatedSkill : s));
         setShowEditModal(false);
         setEditingSkill(null);
@@ -195,7 +195,6 @@ const Skills = () => {
 
       if (res.ok) {
         const updatedSkill = await res.json();
-        // Update local state
         setSkills(skills.map(s => s._id === skillId ? updatedSkill : s));
         showAlert('Proof removed successfully');
       } else {
@@ -252,21 +251,10 @@ const Skills = () => {
     };
   }, [skills]);
 
-  // --- RENDER ---
   return (
     <div>
-      <aside className="sidebar">
-        <div className="sidebar-logo"><div className="sidebar-logo-icon"><i className="fas fa-search-check"></i></div><div className="sidebar-logo-text">ProofdIn</div></div>
-        <ul className="sidebar-menu">
-            <li><Link to="/candidate-dashboard"><i className="fas fa-tachometer-alt"></i> Dashboard</Link></li>
-            <li><Link to="/tailored-resumes"><i className="fas fa-file-pdf"></i> Tailored Resumes</Link></li>
-            <li><Link to="/skills" className="active"><i className="fas fa-th-large"></i> Skills Grid</Link></li>
-            <li><a href="/candidate-dashboard#skill-proof"><i className="fas fa-link"></i> Skill Proof</a></li>
-            <li><a href="/candidate-dashboard#skill-gaps"><i className="fas fa-chart-line"></i> Skill Gaps</a></li>
-            <li><a href="/candidate-dashboard#portfolio"><i className="fas fa-globe"></i> Portfolio</a></li>
-            <li><a href="/candidate-dashboard#settings"><i className="fas fa-cog"></i> Settings</a></li>
-        </ul>
-      </aside>
+      {/* ✅ REPLACED SIDEBAR */}
+      <CandidateSidebar />
 
       <header className="dashboard-header">
         <nav className="dashboard-nav">
@@ -318,7 +306,6 @@ const Skills = () => {
                       <div className="proof-links">
                         {skill.proofs.map((proof, idx) => (
                           <div key={proof._id || idx} style={{ display: 'inline-flex', alignItems: 'center', marginRight: '5px' }}>
-                            {/* The Proof Link */}
                             <a 
                               href={proof.url} 
                               className="proof-link" 
@@ -329,8 +316,6 @@ const Skills = () => {
                             >
                               <i className={getProofIcon(proof.type)}></i> {proof.text}
                             </a>
-                            
-                            {/* The Delete X Button */}
                             <button
                               onClick={() => handleDeleteProof(skill._id, proof._id)}
                               style={{
@@ -342,7 +327,7 @@ const Skills = () => {
                                 color: '#dc3545',
                                 padding: '0.3rem 0.5rem',
                                 fontSize: '0.8rem',
-                                height: '100%' // Match link height
+                                height: '100%' 
                               }}
                               title="Remove proof"
                             >
@@ -354,7 +339,6 @@ const Skills = () => {
                     </div>
                   )}
                   <div className="skill-actions">
-                    {/* BUTTON TO EDIT SKILL */}
                     <button className="skill-action-btn" onClick={() => handleEditClick(skill)}><i className="fas fa-edit"></i> Edit</button>
                     <button className="skill-action-btn" onClick={() => { setActiveSkillId(skill._id); setProofInputType('url'); setProofForm({ type: 'certificate', text: '', url: '', file: null }); setShowProofModal(true); }}><i className="fas fa-link"></i> Add Cert</button>
                     <button className="skill-action-btn delete-btn" onClick={() => handleDeleteSkill(skill._id)}><i className="fas fa-trash"></i> Delete</button>
@@ -388,7 +372,7 @@ const Skills = () => {
           </div>
         )}
 
-        {/* --- EDIT SKILL MODAL (NEW) --- */}
+        {/* --- EDIT SKILL MODAL --- */}
         {showEditModal && (
           <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
             <div className="modal-container" onClick={(e) => e.stopPropagation()}>

@@ -16,9 +16,14 @@ const ShortlistSchema = new mongoose.Schema({
     ref: 'Job',
     default: null
   },
+  // ✅ NEW FIELD: Stores your custom name for the card
+  customLabel: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
-    enum: ['saved', 'emailed', 'interviewing', 'offer', 'rejected'], // <--- ADD 'emailed' HERE
+    enum: ['saved', 'emailed', 'interviewing', 'offer', 'rejected'], 
     default: 'saved'
   },
   note: {

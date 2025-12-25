@@ -31,7 +31,9 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "x-auth-token"] 
 }));
 
-app.use(express.json());
+// Increase limit to 50mb to handle Base64 images
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 📂 SERVE UPLOADED IMAGES
 // This lets http://localhost:5000/uploads/filename.jpg work

@@ -78,6 +78,7 @@ const PostJob = () => {
     };
 
     // --- API: AI AUTO-FILL ---
+    // --- API: AI AUTO-FILL ---
     const autoFillForm = async () => {
         if (!formData.jobDescription || formData.jobDescription.length < 50) {
             return alert("Please paste the full job description first!");
@@ -88,7 +89,10 @@ const PostJob = () => {
             const token = localStorage.getItem('token');
             const res = await axios.post('http://localhost:5000/api/jobs/parse-jd', 
                 { description: formData.jobDescription },
-                { headers: { 'x-auth-token': token } }
+                { 
+                    headers: { 'x-auth-token': token },
+                    timeout: 60000 // ✅ UPDATED: Wait up to 60s for AI retries
+                }
             );
             
             const data = res.data;
@@ -111,10 +115,16 @@ const PostJob = () => {
             if (data.skills) setManualSkills(data.skills);
             if (data.niceToHaveSkills) setNiceToHaveSkills(data.niceToHaveSkills);
 
-            alert("Form auto-filled by AI!");
+            alert("✅ Form auto-filled by AI!");
 
         } catch (err) {
-            alert("AI parsing failed. Please fill manually.");
+            console.error(err);
+            // Better error message for timeouts
+            if (err.code === 'ECONNABORTED') {
+                alert("AI is taking a bit long (High Traffic). Please try again in a moment.");
+            } else {
+                alert("AI parsing failed. Please fill manually.");
+            }
         }
         setAiLoading(false);
     };
@@ -296,8 +306,19 @@ const PostJob = () => {
                         <div className="form-group">
                             <div style={{display:'flex', justifyContent:'space-between'}}>
                                 <label>Job Description *</label>
-                                <button type="button" className="btn btn-secondary" onClick={autoFillForm} disabled={aiLoading} style={{fontSize:'0.8rem', padding:'0.3rem 0.8rem'}}>
-                                    {aiLoading ? 'Analyzing...' : <><i className="fas fa-magic"></i> Auto-Fill Form</>}
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary" 
+                                    onClick={autoFillForm} 
+                                    disabled={aiLoading} 
+                                    style={{fontSize:'0.8rem', padding:'0.3rem 0.8rem'}}
+                                >
+                                    {/* ✅ UPDATED LABEL */}
+                                    {aiLoading ? (
+                                        <><i className="fas fa-spinner fa-spin"></i> Analyzing (may take 20s)...</>
+                                    ) : (
+                                        <><i className="fas fa-magic"></i> Auto-Fill Form</>
+                                    )}
                                 </button>
                             </div>
                             <textarea 

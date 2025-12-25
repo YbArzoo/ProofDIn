@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Layout from '../components/Layout';
 import '../styles/JobPortal.css'; // Import JobPortal styles for consistency
+import { Link } from 'react-router-dom';
+
 
 const JobApplicants = () => {
     const { id } = useParams();
@@ -166,7 +168,14 @@ const JobApplicants = () => {
                                                 </button>
                                             )}
 
-                                            <button className="btn btn-primary">View Profile</button>
+                                            <Link 
+                                                to={`/candidate-view/${app.candidateId}`} // ✅ FIXED: Use 'app'
+                                                target="_blank" 
+                                                className="btn btn-primary"
+                                                style={{ textDecoration: 'none' }} 
+                                            >
+                                                View Profile
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>

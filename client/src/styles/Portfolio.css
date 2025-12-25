@@ -1,0 +1,95 @@
+/* client/src/styles/Portfolio.css */
+
+/* --- LAYOUT --- */
+.portfolio-container {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    height: calc(100vh - 80px);
+    overflow: hidden;
+}
+
+.portfolio-editor {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow-y: auto;
+    height: 100%;
+}
+
+.portfolio-preview-wrapper {
+    background: #555; /* Dark background to make the paper pop */
+    padding: 2rem;
+    border-radius: 12px;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.portfolio-paper {
+    background: white;
+    width: 100%;
+    max-width: 900px;
+    min-height: 1000px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+/* --- THEME SELECTION CARDS --- */
+.theme-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.theme-card {
+    border: 2px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.theme-card:hover { border-color: var(--primary-light); }
+.theme-card.active { border-color: var(--primary); background-color: var(--primary-light); }
+
+.toggle-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* =========================================
+   THEME 1: MODERN (Clean, Blue Accents)
+   ========================================= */
+.theme-modern { font-family: 'Segoe UI', sans-serif; color: #333; }
+.theme-modern header { background: #f8f9fa; padding: 3rem 2rem; text-align: center; border-bottom: 4px solid #4361ee; }
+.theme-modern h1 { font-size: 2.5rem; color: #4361ee; margin-bottom: 0.5rem; }
+.theme-modern h2 { color: #4361ee; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 2rem; }
+.theme-modern .p-section { padding: 0 2rem; margin-bottom: 1.5rem; }
+.theme-modern .skill-tag { background: #eef2ff; color: #4361ee; padding: 5px 15px; border-radius: 20px; margin: 3px; display: inline-block; font-weight: 600; }
+
+/* =========================================
+   THEME 2: MINIMAL (Black & White, Serif)
+   ========================================= */
+.theme-minimal { font-family: 'Georgia', serif; color: #111; padding: 4rem; }
+.theme-minimal header { border-bottom: 1px solid #000; padding-bottom: 2rem; margin-bottom: 3rem; }
+.theme-minimal h1 { font-size: 3rem; text-transform: uppercase; letter-spacing: 2px; }
+.theme-minimal h2 { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem; border-bottom: 1px solid #ccc; display: inline-block; padding-bottom: 5px; }
+.theme-minimal .skill-tag { border: 1px solid #333; padding: 4px 10px; margin: 4px; display: inline-block; font-size: 0.9rem; }
+
+/* =========================================
+   THEME 3: CREATIVE (Dark Header, Grid)
+   ========================================= */
+.theme-creative { font-family: 'Verdana', sans-serif; display: grid; grid-template-columns: 300px 1fr; min-height: 100%; }
+.theme-creative aside { background: #2d3436; color: white; padding: 3rem 2rem; }
+.theme-creative main { padding: 3rem; background: #fff; }
+.theme-creative h1 { color: white; font-size: 2.2rem; margin-bottom: 2rem; }
+.theme-creative h2 { color: #d63031; font-weight: bold; margin-top: 0; margin-bottom: 1.5rem; font-size: 1.5rem; }
+.theme-creative .contact-info { color: #b2bec3; font-size: 0.9rem; margin-top: 2rem; }
+.theme-creative .skill-tag { background: #d63031; color: white; padding: 5px 10px; margin: 2px; display: inline-block; font-size: 0.8rem; border-radius: 4px; }

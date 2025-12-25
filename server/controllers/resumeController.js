@@ -3,6 +3,7 @@ const Groq = require('groq-sdk');
 const CandidateProfile = require('../models/CandidateProfile');
 const User = require('../models/User'); 
 const Resume = require('../models/Resume'); 
+const Skill = require('../models/Skill'); // <--- 1. NEW IMPORT
 
 // --- DEBUG BLOCK ---
 console.log("------------------------------------------------");
@@ -12,14 +13,9 @@ if (!process.env.GROQ_API_KEY) {
 } else {
     const key = process.env.GROQ_API_KEY;
     console.log(`✅ Key Loaded. Length: ${key.length}`);
-    // Show first 4 chars to verify it's the right key (gsk_...)
-    console.log(`   Starts with: "${key.substring(0, 4)}..."`); 
-    if (key.startsWith(' ')) console.log("⚠️ WARNING: Your key has a generic SPACE at the start! Remove it.");
-    if (key.includes('"')) console.log("⚠️ WARNING: Your key includes QUOTES. Remove them.");
 }
 console.log("------------------------------------------------");
 
-// 1. INITIALIZE GROQ (Only once!)
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY, 
 });
@@ -35,61 +31,102 @@ exports.generateTailoredResume = async (req, res) => {
 
         const userId = req.user.userId || req.user.id || req.user._id;
         
-        // --- SELF-HEALING LOGIC START ---
-        // 1. Fetch User Details
+        // --- 1. FETCH DATA SOURCES ---
         const userDetails = await User.findById(userId).select('-password');
         if (!userDetails) return res.status(404).json({ message: 'User not found' });
 
-        // 2. Try to fetch Profile, or CREATE IT if missing
         let candidateProfile = await CandidateProfile.findOne({ user: userId });
         
+        // Fallback if profile missing
         if (!candidateProfile) {
             console.log("⚠️ Profile missing during Resume Gen. Creating default...");
             candidateProfile = await CandidateProfile.create({
                 user: userId,
                 headline: "Aspiring Professional",
-                summary: `Motivated professional named ${userDetails.fullName} looking for new opportunities.`,
+                summary: `Motivated professional named ${userDetails.fullName}.`,
                 skills: [], 
                 experienceYears: 0,
-                location: "Remote",
-                phone: ""
+                location: "Remote"
             });
         }
-        // --- SELF-HEALING LOGIC END ---
 
-        const skillsList = candidateProfile.skills && candidateProfile.skills.length > 0 
-            ? candidateProfile.skills.map(s => `${s.name} (${s.level})`).join(', ')
-            : "General professional skills";
+        // --- 2. FETCH SKILL GRID (NEW) ---
+        const verifiedSkills = await Skill.find({ user: userId });
+        const skillGridString = verifiedSkills.map(s => `${s.name} (${s.level})`).join(', ');
 
+        // --- 3. PREPARE CONTEXT FOR AI ---
+        // Combine Profile Skills + Grid Skills
+        const profileSkills = candidateProfile.skills ? candidateProfile.skills.map(s => typeof s === 'string' ? s : s.name).join(', ') : "";
+        
         const candidateContext = `
+            CONTACT INFO:
             Name: ${userDetails.fullName}
             Email: ${userDetails.email}
+            Phone: ${candidateProfile.phone || "Not specified"}
+            Location: ${candidateProfile.location || "Not specified"}
+            Links: ${candidateProfile.socialLinks ? candidateProfile.socialLinks.join(', ') : ''}
+
+            PROFESSIONAL PROFILE:
             Headline: ${candidateProfile.headline || "Not specified"}
-            Skills: ${skillsList}
-            Bio: ${candidateProfile.summary || "Not specified"}
+            Summary: ${candidateProfile.summary || "Not specified"}
+            Years Exp: ${candidateProfile.experienceYears || 0}
+            
+            WORK HISTORY (Database):
+            ${candidateProfile.experience || "No structured experience found in DB."}
+
+            EDUCATION:
+            ${candidateProfile.education || "No education found in DB."}
+
+            TECHNICAL SKILL GRID (Verified):
+            ${skillGridString || profileSkills || "General professional skills"}
         `;
 
         console.log("Generating resume with Groq...");
 
+        // --- 4. SEND TO GROQ ---
         const chatCompletion = await groq.chat.completions.create({
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are an expert professional resume writer. Your task is to take raw candidate information and rewrite it into a highly tailored, professional resume that perfectly aligns with a target Job Description. Use professional action verbs. Do not invent experiences, but emphasize the matching skills. Output ONLY the resume content in clean Markdown format."
+                    "content": "You are an expert executive resume writer. Your goal is to write a highly tailored, ATS-friendly resume."
                 },
                 {
                     "role": "user",
-                    "content": `CANDIDATE INFO:\n${candidateContext}\n\nTARGET JOB DESCRIPTION:\n${jobDescriptionText}\n\nWrite the tailored resume now.`
+                    "content": `
+                    Please generate a tailored resume in Markdown format based on these three data sources:
+
+                    SOURCE 1: CANDIDATE PROFILE (Static Data)
+                    ${candidateContext}
+
+                    SOURCE 2: VERIFIED SKILL GRID
+                    ${skillGridString}
+
+                    SOURCE 3: TARGET JOB DESCRIPTION / USER INPUT
+                    "${jobDescriptionText}"
+
+                    ---
+                    INSTRUCTIONS:
+                    1. **Header**: Use Name and Contact info from SOURCE 1.
+                    2. **Summary**: Blend the candidate's base summary (Source 1) with keywords from the Target Job (Source 3).
+                    3. **Skills**: List skills from SOURCE 2, prioritizing those that appear in SOURCE 3.
+                    4. **Experience**: 
+                       - If Source 3 contains a work history narrative (e.g., "I worked as a UI Designer..."), USE THAT as the primary role description.
+                       - Combine it with any history found in Source 1.
+                       - Use strong action verbs.
+                    5. **Education**: Use data from Source 1.
+                    
+                    Output ONLY the Markdown text.
+                    `
                 }
             ],
             "model": "llama-3.3-70b-versatile",
             "temperature": 0.6,
-            "max_completion_tokens": 3000
+            "max_completion_tokens": 3500
         });
 
         const generatedText = chatCompletion.choices[0]?.message?.content || "";
 
-        // --- EXTRACT TITLE & COMPANY ---
+        // --- EXTRACT TITLE & COMPANY (Kept your existing logic) ---
         let jobTitle = "Tailored Role";
         let companyName = "Target Company";
 
@@ -104,7 +141,6 @@ exports.generateTailoredResume = async (req, res) => {
         } else {
             const firstLine = jobDescriptionText.split('\n')[0];
             const cleanTitle = firstLine.split(/(?:with|at|for|\||,|\()/i)[0].trim();
-            
             if (cleanTitle.length > 0 && cleanTitle.length < 50) {
                 jobTitle = cleanTitle;
             } else {
@@ -124,7 +160,7 @@ exports.generateTailoredResume = async (req, res) => {
         });
 
         await newResume.save();
-        console.log(`✅ Resume saved: "${jobTitle}" for "${companyName}"`);
+        console.log(`✅ Resume saved: "${jobTitle}"`);
 
         res.json({ 
             resumeContent: generatedText,
@@ -135,7 +171,6 @@ exports.generateTailoredResume = async (req, res) => {
 
     } catch (err) {
         console.error('AI Resume Gen Error:', err.message);
-        // Better error message for the frontend
         res.status(500).json({ message: 'Server Error during AI generation', error: err.message });
     }
 };
@@ -152,5 +187,39 @@ exports.getResumeHistory = async (req, res) => {
     } catch (err) {
         console.error('Fetch History Error:', err);
         res.status(500).json({ message: 'Server Error fetching history' });
+    }
+};
+// 4. UPDATE RESUME TITLE
+exports.updateResume = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { jobTitle } = req.body;
+        const userId = req.user.userId || req.user.id || req.user._id;
+
+        const resume = await Resume.findOneAndUpdate(
+            { _id: id, user: userId },
+            { jobTitle },
+            { new: true }
+        );
+
+        if (!resume) return res.status(404).json({ message: 'Resume not found' });
+        res.json(resume);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error updating resume' });
+    }
+};
+
+// 5. DELETE RESUME
+exports.deleteResume = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId || req.user.id || req.user._id;
+
+        const resume = await Resume.findOneAndDelete({ _id: id, user: userId });
+        
+        if (!resume) return res.status(404).json({ message: 'Resume not found' });
+        res.json({ message: 'Resume deleted' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error deleting resume' });
     }
 };

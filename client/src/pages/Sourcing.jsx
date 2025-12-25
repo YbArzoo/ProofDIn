@@ -12,12 +12,12 @@ const Sourcing = () => {
     // GitHub Inputs
     const [ghSkills, setGhSkills] = useState('');
     const [ghLocation, setGhLocation] = useState('');
-    const [ghRepos, setGhRepos] = useState(1); // RESTORED FEATURE
+    const [ghRepos, setGhRepos] = useState(1); 
     
     // LinkedIn Inputs
     const [liTitle, setLiTitle] = useState('');
     const [liSkills, setLiSkills] = useState('');
-    const [liLocation, setLiLocation] = useState(''); // RESTORED FEATURE
+    const [liLocation, setLiLocation] = useState(''); 
 
     // Results & Loading
     const [results, setResults] = useState([]);
@@ -36,40 +36,66 @@ const Sourcing = () => {
         setAnalyzing(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:5000/api/jobs/analyze', 
+            
+            // ✅ FIX: Use 'parse-jd' instead of 'analyze'. 
+            // This uses the powerful Lite model with 3000 char limit.
+            const res = await axios.post('http://localhost:5000/api/jobs/parse-jd', 
                 { description: jdText },
-                { headers: { 'x-auth-token': token } }
+                { 
+                    headers: { 'x-auth-token': token },
+                    timeout: 60000 // Wait up to 60s for the AI
+                }
             );
 
-            const { skills, location, title } = res.data;
+            const data = res.data;
 
-            // Auto-fill BOTH tools
-            if (skills && skills.length > 0) {
-                const topSkills = skills.slice(0, 4).join(' ');
-                setGhSkills(topSkills);
-                setLiSkills(topSkills);
+            // --- DATA MAPPING ---
+            // The parse-jd endpoint returns 'skills' array, 'city', 'country', 'jobTitle'
+            
+            const extractedSkills = data.skills || [];
+            
+            // Combine City + Country for a search location string
+            let extractedLocation = '';
+            if (data.city) extractedLocation += data.city;
+            if (data.country) extractedLocation += (extractedLocation ? `, ${data.country}` : data.country);
+            if (!extractedLocation && data.locationType) extractedLocation = data.locationType; // Fallback to 'Remote' etc.
+
+            const extractedTitle = data.jobTitle || '';
+
+            // --- POPULATE UI ---
+            
+            // 1. Fill Skills (Take top 5 keywords for cleaner search)
+            if (extractedSkills.length > 0) {
+                // Join with spaces for GitHub (e.g. "React Node SQL")
+                const skillString = extractedSkills.slice(0, 5).join(' '); 
+                setGhSkills(skillString);
+                setLiSkills(skillString);
             }
             
-            if (location) {
-                setGhLocation(location);
-                setLiLocation(location);
+            // 2. Fill Location
+            if (extractedLocation) {
+                setGhLocation(extractedLocation);
+                setLiLocation(extractedLocation);
             }
             
-            if (title) setLiTitle(title);
+            // 3. Fill Title (LinkedIn only)
+            if (extractedTitle) {
+                setLiTitle(extractedTitle);
+            }
 
         } catch (err) {
             console.error(err);
-            alert("Analysis failed. Make sure the server is running.");
+            alert("Analysis failed. Please try again.");
         }
         setAnalyzing(false);
     };
 
-    // 2. GITHUB SEARCH (Restored Repo Count Logic)
+    // 2. GITHUB SEARCH
     const searchGitHub = async () => {
         if(!ghSkills) return alert("Skills are required for GitHub search.");
         
         setSearching(true);
-        setResults([]); // Clear previous results
+        setResults([]); 
 
         // Construct Query: skills location:city repos:>N
         let query = encodeURIComponent(ghSkills);
@@ -85,7 +111,7 @@ const Sourcing = () => {
         setSearching(false);
     };
 
-    // 3. LINKEDIN X-RAY (Restored Location Logic)
+    // 3. LINKEDIN X-RAY
     const searchLinkedIn = () => {
         if(!liTitle && !liSkills) return alert("Please fill in Job Title or Skills.");
 
@@ -112,7 +138,7 @@ const Sourcing = () => {
                 </div>
                 <textarea 
                     className="smart-fill-textarea"
-                    placeholder="Paste job description here (e.g. 'Looking for a React Developer in Dhaka with 3 years experience...')..."
+                    placeholder="Paste job description here..."
                     value={jdText}
                     onChange={(e) => setJdText(e.target.value)}
                 />
@@ -174,7 +200,6 @@ const Sourcing = () => {
                         <input className="form-input" placeholder="e.g. Tailwind TypeScript" value={liSkills} onChange={e => setLiSkills(e.target.value)} />
                     </div>
                     
-                    {/* RESTORED LOCATION INPUT */}
                     <div className="form-group">
                         <label className="form-label">Location (Optional)</label>
                         <input className="form-input" placeholder="e.g. Dhaka, New York" value={liLocation} onChange={e => setLiLocation(e.target.value)} />

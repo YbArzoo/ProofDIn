@@ -23,4 +23,10 @@ router.delete('/:id', auth, shortlistController.removeFromShortlist);
 // @desc    Send email to candidate (Ethereal Simulation)
 router.post('/contact', auth, shortlistController.contactCandidate);
 
+// ✅ NEW: Candidate fetches their offers
+router.get('/my-offers', auth, shortlistController.getCandidateOffers);
+
+// ✅ NEW: Candidate accepts/rejects
+router.put('/respond/:id', auth, shortlistController.respondToOffer);
+
 module.exports = router;

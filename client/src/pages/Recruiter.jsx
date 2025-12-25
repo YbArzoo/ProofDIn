@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Layout from '../components/Layout';
 import '../styles/Recruiter.css';
+import { Link } from 'react-router-dom';
 
 const Recruiter = () => {
     // 1. STATE
@@ -115,7 +116,7 @@ const Recruiter = () => {
 
             // STEP 2: Send the Email
             const res = await axios.post('http://localhost:5000/api/shortlist/contact',
-                { candidateId, message: msg },
+                { candidateId, message: msg, jobId: currentJobId },
                 { headers: { 'x-auth-token': token } }
             );
             
@@ -209,14 +210,24 @@ const Recruiter = () => {
                                 <p>{c.whyMatched}</p>
                             </div>
                             <div className="candidate-actions">
-                                <button className="btn" style={{background:'#f0f0f0'}}>View</button>
-                                <button className="btn btn-primary" onClick={() => contactCandidate(c.id)}>Contact</button>
-                                {shortlistIds.includes(c.id) ? (
-                                    <button className="btn" style={{color:'green'}} disabled><i className="fas fa-check"></i> Saved</button>
-                                ) : (
-                                    <button className="btn" onClick={() => saveCandidate(c.id)}>Save</button>
-                                )}
-                            </div>
+                            {/* ✅ UPDATED VIEW BUTTON */}
+                            <Link 
+                                to={`/candidate-view/${c.id}`} 
+                                target="_blank" 
+                                className="btn" 
+                                style={{ background: '#f0f0f0', textDecoration: 'none', color: '#333', textAlign: 'center' }}
+                            >
+                                View
+                            </Link>
+
+                            <button className="btn btn-primary" onClick={() => contactCandidate(c.id)}>Contact</button>
+                            
+                            {shortlistIds.includes(c.id) ? (
+                                <button className="btn" style={{color:'green'}} disabled><i className="fas fa-check"></i> Saved</button>
+                            ) : (
+                                <button className="btn" onClick={() => saveCandidate(c.id)}>Save</button>
+                            )}
+                        </div>
                         </div>
                     ))}
                 </div>

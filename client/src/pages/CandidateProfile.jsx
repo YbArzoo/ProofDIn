@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import CandidateSidebar from '../components/CandidateSidebar'; // ✅ IMPORT
 import '../styles/CandidateProfile.css'; 
 
 const CandidateProfile = () => {
@@ -14,7 +15,7 @@ const CandidateProfile = () => {
     });
 
     const [education, setEducation] = useState({
-        highestDegree: '', fieldOfStudy: '', schoolName: '', graduationYear: '', certifications: ''
+        highestDegree: '', fieldOfStudy: '', schoolName: '', graduationYear: ''
     });
 
     const [experience, setExperience] = useState({
@@ -45,36 +46,56 @@ const CandidateProfile = () => {
                 const data = await res.json();
                 const profile = data.profile || {};
 
+                // 1. Load Personal Info
                 setPersonalInfo({
                     firstName: profile.firstName || '', 
                     lastName: profile.lastName || '',
                     email: profile.email || '', 
-                    phone: profile.phone || '', // Fetch phone
-                    city: profile.location ? profile.location.split(',')[0] : '',
-                    country: profile.location ? profile.location.split(',')[1] : '',
+                    phone: profile.phone || '',
+                    city: profile.location ? profile.location.split(',')[0].trim() : '',
+                    country: profile.location ? profile.location.split(',')[1]?.trim() || '' : '',
                     bio: profile.summary || ''
                 });
 
+                // 2. Load Profile Pic
+                if (profile.photoUrl) {
+                    setProfilePic(profile.photoUrl);
+                }
+
+                // 3. Load Experience (FIXED SKILLS & INDUSTRY)
                 setExperience({
                     currentCompany: '', 
                     currentRole: profile.headline || '',
                     yearsOfExperience: profile.experienceYears || '',
-                    industry: '',
-                    skills: profile.skills ? profile.skills.join(', ') : ''
+                    industry: profile.industry || '', 
+                    skills: profile.skills 
+                        ? profile.skills.map(s => (typeof s === 'object' ? s.name : s)).join(', ') 
+                        : ''
                 });
 
-                setOrganization({
-                    linkedinUrl: profile.socialLinks ? profile.socialLinks.find(l => l.includes('linkedin')) : '',
-                    portfolioUrl: profile.portfolioUrl || '',
-                    githubUrl: profile.socialLinks ? profile.socialLinks.find(l => l.includes('github')) : '',
-                    otherLinks: ''
-                });
-
-                if (profile.education) {
-                    setEducation({
-                        ...education,
-                        fieldOfStudy: typeof profile.education === 'string' ? profile.education : ''
+                // 4. Load Social Links
+                if (profile.socialLinks && Array.isArray(profile.socialLinks)) {
+                    setOrganization({
+                        linkedinUrl: profile.socialLinks.find(l => l.includes('linkedin.com')) || '',
+                        githubUrl: profile.socialLinks.find(l => l.includes('github.com')) || '',
+                        portfolioUrl: profile.portfolioUrl || '',
+                        otherLinks: ''
                     });
+                }
+
+                // 5. Load Education
+                if (profile.education) {
+                    try {
+                        const eduObj = JSON.parse(profile.education);
+                        setEducation({
+                            highestDegree: eduObj.highestDegree || '',
+                            fieldOfStudy: eduObj.fieldOfStudy || '',
+                            schoolName: eduObj.schoolName || '',
+                            graduationYear: eduObj.graduationYear || ''
+                        });
+                    } catch (e) {
+                        setEducation(prev => ({ ...prev, fieldOfStudy: profile.education }));
+                    }
                 }
 
                 setLoading(false);
@@ -127,40 +148,41 @@ const CandidateProfile = () => {
     };
 
     // --- SUBMIT HANDLERS ---
+
     const handlePersonalSubmit = async (e) => {
         e.preventDefault();
-        
-        // ✅ FIX: Send Name and Phone
         const payload = {
             firstName: personalInfo.firstName,
             lastName: personalInfo.lastName,
             phone: personalInfo.phone,
             summary: personalInfo.bio,
             location: `${personalInfo.city}, ${personalInfo.country}`,
+            photoUrl: profilePic 
         };
-
         const success = await saveToBackend(payload);
-        if (success) showAlert('Personal information saved successfully!', 'success');
+        if (success) showAlert('Personal information saved!', 'success');
     };
 
     const handleEducationSubmit = async (e) => {
         e.preventDefault();
-        const educationString = `${education.highestDegree} in ${education.fieldOfStudy} at ${education.schoolName} (${education.graduationYear})`;
+        const educationString = JSON.stringify(education);
         const payload = { education: educationString };
         const success = await saveToBackend(payload);
-        if (success) showAlert('Educational background saved successfully!', 'success');
+        if (success) showAlert('Educational background saved!', 'success');
     };
 
     const handleExperienceSubmit = async (e) => {
         e.preventDefault();
         const skillsArray = experience.skills.split(',').map(s => s.trim()).filter(s => s);
+        
         const payload = {
             headline: experience.currentRole,
             experienceYears: experience.yearsOfExperience,
+            industry: experience.industry, 
             skills: skillsArray
         };
         const success = await saveToBackend(payload);
-        if (success) showAlert('Work experience saved successfully!', 'success');
+        if (success) showAlert('Work experience saved!', 'success');
     };
 
     const handleOrganizationSubmit = async (e) => {
@@ -170,9 +192,12 @@ const CandidateProfile = () => {
         if (organization.githubUrl) socialLinks.push(organization.githubUrl);
         if (organization.otherLinks) socialLinks.push(organization.otherLinks);
 
-        const payload = { socialLinks: socialLinks };
+        const payload = { 
+            socialLinks: socialLinks,
+            portfolioUrl: organization.portfolioUrl
+        };
         const success = await saveToBackend(payload);
-        if (success) showAlert('Links saved successfully!', 'success');
+        if (success) showAlert('Links saved!', 'success');
     };
 
     const handlePasswordSubmit = async (e) => {
@@ -181,29 +206,30 @@ const CandidateProfile = () => {
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     };
 
+    const handleLogout = () => { localStorage.clear(); window.location.href = '/'; };
+
     if (loading) return <div style={{padding: '2rem', textAlign: 'center'}}>Loading Profile...</div>;
 
     return (
         <div className="cp-body">
+            {/* ✅ REPLACED SIDEBAR */}
+            <CandidateSidebar />
+
             <header className="dashboard-header">
                 <nav className="dashboard-nav">
-                    <div className="logo">
-                        <div className="logo-icon"><i className="fas fa-check-circle"></i></div>
-                        <div className="logo-text">ProofdIn</div>
-                    </div>
                     <div className="user-menu">
                         <div className="user-profile">
-                            <div className="avatar">C</div>
-                            <span>Candidate</span>
+                            <div className="avatar">{personalInfo.firstName ? personalInfo.firstName[0] : 'C'}</div>
+                            <span>{personalInfo.firstName || 'Candidate'}</span>
                         </div>
-                        <Link to="/candidate-dashboard" className="btn btn-secondary">
-                            <i className="fas fa-arrow-left"></i> Back to Dashboard
-                        </Link>
+                        <button className="btn btn-primary" onClick={handleLogout} style={{ width: 'auto', display: 'inline-flex' }}>
+                            <i className="fas fa-sign-out-alt"></i> Logout
+                        </button>
                     </div>
                 </nav>
             </header>
 
-            <div className="dashboard-container">
+            <div className="dashboard-container" style={{ marginTop: 0 }}>
                 <div id="alertContainer">
                     {alerts.map(alert => (
                         <div key={alert.id} className={`alert alert-${alert.type}`}>
@@ -217,22 +243,32 @@ const CandidateProfile = () => {
                 <div className="profile-section">
                     <div className="profile-picture-section">
                         <div className="profile-picture-container">
-                            <img src={profilePic} alt="Profile" className="profile-picture" />
+                            <img src={profilePic} alt="Profile" className="profile-picture" style={{objectFit: 'cover'}} />
                             <div className="picture-upload-overlay" onClick={() => document.getElementById('profilePictureInput').click()}>
                                 <i className="fas fa-camera"></i>
                             </div>
                         </div>
-                        <input type="file" id="profilePictureInput" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (event) => setProfilePic(event.target.result);
-                                reader.readAsDataURL(file);
-                            }
-                        }} />
+                        <input 
+                            type="file" 
+                            id="profilePictureInput" 
+                            accept="image/*" 
+                            style={{ display: 'none' }} 
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    if (file.size > 2 * 1024 * 1024) {
+                                        showAlert("Image too large. Please select an image under 2MB.", "error");
+                                        return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => setProfilePic(event.target.result);
+                                    reader.readAsDataURL(file);
+                                }
+                            }} 
+                        />
                         <div className="picture-info">
                             <h3>Update Profile Picture</h3>
-                            <p>Click the camera icon to upload a new profile picture</p>
+                            <p>Click the camera to change. <strong>Click "Save Personal Information" below to apply.</strong></p>
                         </div>
                     </div>
                 </div>
@@ -255,7 +291,7 @@ const CandidateProfile = () => {
                         </div>
                         <div className="form-group">
                             <label htmlFor="email">Email Address</label>
-                            <input type="email" name="email" value={personalInfo.email} disabled style={{backgroundColor: '#eee'}} placeholder="Email cannot be changed" />
+                            <input type="email" name="email" value={personalInfo.email} disabled style={{backgroundColor: '#eee', cursor: 'not-allowed'}} />
                         </div>
                         <div className="form-group">
                             <label htmlFor="phone">Phone Number</label>
@@ -274,7 +310,6 @@ const CandidateProfile = () => {
                         <div className="form-group">
                             <label htmlFor="bio">Professional Bio</label>
                             <textarea name="bio" value={personalInfo.bio} onChange={(e) => handleInputChange(e, setPersonalInfo)} rows="3" placeholder="Tell us about your professional background..."></textarea>
-                            <p className="form-help-text">Brief description of your skills and experience (max 500 characters)</p>
                         </div>
                         <div className="form-actions">
                             <button type="submit" className="btn btn-primary">Save Personal Information</button>
@@ -282,7 +317,6 @@ const CandidateProfile = () => {
                     </form>
                 </div>
 
-                {/* Other sections (Education, Work, etc.) remain the same... */}
                 <div className="profile-section">
                     <div className="section-header">
                         <i className="fas fa-graduation-cap"></i>
@@ -344,7 +378,6 @@ const CandidateProfile = () => {
                         <div className="form-group">
                             <label htmlFor="skills">Key Skills (comma-separated)</label>
                             <textarea name="skills" value={experience.skills} onChange={(e) => handleInputChange(e, setExperience)} rows="3" placeholder="e.g., JavaScript, React, Node.js, Python, SQL"></textarea>
-                            <p className="form-help-text">List your technical and professional skills</p>
                         </div>
                         <div className="form-actions">
                             <button type="submit" className="btn btn-primary">Save Work Experience</button>

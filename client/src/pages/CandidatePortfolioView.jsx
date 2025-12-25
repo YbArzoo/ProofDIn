@@ -18,7 +18,7 @@ const CandidatePortfolioView = () => {
             const token = localStorage.getItem('token');
             try {
                 // Fetch specific candidate data
-                const res = await fetch(`http://localhost:5000/api/candidate/portfolio-view/${id}`, {
+                const res = await fetch(`/api/candidate/portfolio-view/${id}`, {
                     headers: { 'x-auth-token': token }
                 });
                 const data = await res.json();

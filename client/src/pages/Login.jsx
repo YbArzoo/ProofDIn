@@ -37,7 +37,7 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
 
-        const API_BASE_URL = "http://localhost:5000/api"; // Matches your server
+        const API_BASE_URL = "/api"; // Matches your server
 
         try {
             let endpoint = activeTab === 'login' ? '/auth/login' : '/auth/signup';

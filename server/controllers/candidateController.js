@@ -328,7 +328,7 @@ exports.addProof = async (req, res) => {
     if (skill.user.toString() !== userId.toString()) return res.status(401).json({ msg: 'User not authorized' });
     let proofData = { text: req.body.text, type: req.body.type };
     if (req.file) {
-      proofData.url = `http://localhost:5000/uploads/${req.file.filename}`;
+      proofData.url = `/uploads/${req.file.filename}`;
       proofData.type = 'file'; 
     } else {
       proofData.url = req.body.url;

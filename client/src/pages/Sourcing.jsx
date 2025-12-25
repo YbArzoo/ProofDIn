@@ -39,7 +39,7 @@ const Sourcing = () => {
             
             // ✅ FIX: Use 'parse-jd' instead of 'analyze'. 
             // This uses the powerful Lite model with 3000 char limit.
-            const res = await axios.post('http://localhost:5000/api/jobs/parse-jd', 
+            const res = await axios.post('/api/jobs/parse-jd', 
                 { description: jdText },
                 { 
                     headers: { 'x-auth-token': token },

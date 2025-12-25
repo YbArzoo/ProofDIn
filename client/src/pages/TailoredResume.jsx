@@ -42,7 +42,7 @@ const TailoredResume = () => {
 
     const fetchHistory = async (token) => {
         try {
-            const res = await fetch('http://localhost:5000/api/candidate/resumes', {
+            const res = await fetch('/api/candidate/resumes', {
                 headers: { 'x-auth-token': token }
             });
             const data = await res.json();
@@ -55,7 +55,7 @@ const TailoredResume = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:5000/api/candidate/generate-resume', {
+            const res = await fetch('/api/candidate/generate-resume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify({ jobDescriptionText: jdText })
@@ -106,7 +106,7 @@ const TailoredResume = () => {
         if (!editedTitle.trim()) return;
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:5000/api/candidate/resumes/${resumeId}`, {
+            await fetch(`/api/candidate/resumes/${resumeId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify({ jobTitle: editedTitle })
@@ -121,7 +121,7 @@ const TailoredResume = () => {
         if (!confirm("Delete this resume?")) return;
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:5000/api/candidate/resumes/${resumeId}`, {
+            await fetch(`/api/candidate/resumes/${resumeId}`, {
                 method: 'DELETE',
                 headers: { 'x-auth-token': token }
             });

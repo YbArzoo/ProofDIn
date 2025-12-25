@@ -21,7 +21,7 @@ const JobPortal = () => {
 
     const fetchJobs = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/jobs');
+            const res = await axios.get('/api/jobs');
             setJobs(res.data);
             setFilteredJobs(res.data);
         } catch (err) {
@@ -44,7 +44,7 @@ const JobPortal = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:5000/api/jobs/${jobId}/apply`, {}, {
+            const res = await axios.post(`/api/jobs/${jobId}/apply`, {}, {
                 headers: { 'x-auth-token': token }
             });
 

@@ -25,7 +25,7 @@ const Recruiter = () => {
     const fetchShortlistIds = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/shortlist', {
+            const res = await axios.get('/api/shortlist', {
                 headers: { 'x-auth-token': token }
             });
             // Map the results to just get the candidate IDs for easy checking
@@ -41,7 +41,7 @@ const Recruiter = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:5000/api/jobs/analyze', 
+            const res = await axios.post('/api/jobs/analyze', 
                 { description: jobDescription },
                 { headers: { 'x-auth-token': token } }
             );
@@ -65,7 +65,7 @@ const Recruiter = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:5000/api/jobs/match', 
+            const res = await axios.post('/api/jobs/match', 
                 { jobId: jId, query: searchQuery },
                 { headers: { 'x-auth-token': token } }
             );
@@ -79,7 +79,7 @@ const Recruiter = () => {
     const saveCandidate = async (candidateId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/shortlist/add', 
+            await axios.post('/api/shortlist/add', 
                 { candidateId, jobId: currentJobId, status: 'saved' },
                 { headers: { 'x-auth-token': token } }
             );
@@ -101,7 +101,7 @@ const Recruiter = () => {
             // STEP 1: Add to Shortlist with 'emailed' status
             if (!shortlistIds.includes(candidateId)) {
                 try {
-                    await axios.post('http://localhost:5000/api/shortlist/add', 
+                    await axios.post('/api/shortlist/add', 
                         { candidateId, jobId: currentJobId, status: 'emailed' }, // <--- CHANGED TO 'emailed'
                         { headers: { 'x-auth-token': token } }
                     );
@@ -115,7 +115,7 @@ const Recruiter = () => {
             }
 
             // STEP 2: Send the Email
-            const res = await axios.post('http://localhost:5000/api/shortlist/contact',
+            const res = await axios.post('/api/shortlist/contact',
                 { candidateId, message: msg, jobId: currentJobId },
                 { headers: { 'x-auth-token': token } }
             );

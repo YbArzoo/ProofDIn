@@ -37,7 +37,7 @@ const CandidateProfile = () => {
             if (!token) return;
 
             try {
-                const res = await fetch('http://localhost:5000/api/candidate/me', {
+                const res = await fetch('/api/candidate/me', {
                     headers: { 'x-auth-token': token }
                 });
                 
@@ -129,7 +129,7 @@ const CandidateProfile = () => {
     const saveToBackend = async (dataPayload) => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:5000/api/candidate/me', {
+            const res = await fetch('/api/candidate/me', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

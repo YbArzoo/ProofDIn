@@ -29,11 +29,11 @@ const CandidatePortfolio = () => {
 
             try {
                 // Fetch Profile
-                const profileRes = await fetch('http://localhost:5000/api/candidate/me', { headers });
+                const profileRes = await fetch('/api/candidate/me', { headers });
                 const profileData = await profileRes.json();
                 
                 // Fetch Skills
-                const skillsRes = await fetch('http://localhost:5000/api/candidate/skills', { headers });
+                const skillsRes = await fetch('/api/candidate/skills', { headers });
                 const skillsData = await skillsRes.json();
 
                 if (profileRes.ok) {
@@ -58,7 +58,7 @@ const CandidatePortfolio = () => {
     const handleSaveConfig = async () => {
         const token = localStorage.getItem('token');
         try {
-            await fetch('http://localhost:5000/api/candidate/me', {
+            await fetch('/api/candidate/me', {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',

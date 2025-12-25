@@ -26,7 +26,7 @@ const AppliedJobs = () => {
 
     const fetchAppliedJobs = async (token) => {
         try {
-            const res = await axios.get('http://localhost:5000/api/jobs/applied', {
+            const res = await axios.get('/api/jobs/applied', {
                 headers: { 'x-auth-token': token }
             });
             setJobs(res.data);

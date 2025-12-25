@@ -30,7 +30,7 @@ const RecruiterProfile = () => {
     const fetchProfile = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/recruiters/me', {
+            const res = await axios.get('/api/recruiters/me', {
                 headers: { 'x-auth-token': token }
             });
             
@@ -62,7 +62,7 @@ const RecruiterProfile = () => {
                 // Ensure the URL is absolute if it starts with /uploads
                 const url = data.profilePicture.startsWith('http') 
                     ? data.profilePicture 
-                    : `http://localhost:5000${data.profilePicture}`;
+                    : `${data.profilePicture}`;
                 setProfilePic(url);
             }
 
@@ -98,13 +98,13 @@ const RecruiterProfile = () => {
         try {
             const token = localStorage.getItem('token');
             // This matches the backend route we created in Step 4
-            const res = await axios.post('http://localhost:5000/api/recruiters/me/avatar', 
+            const res = await axios.post('/api/recruiters/me/avatar', 
                 formData, 
                 { headers: { 'x-auth-token': token, 'Content-Type': 'multipart/form-data' } }
             );
             
             // Update UI immediately with the new image
-            const newUrl = `http://localhost:5000${res.data.profilePicture}`;
+            const newUrl = `${res.data.profilePicture}`;
             setProfilePic(newUrl);
             alert("Profile picture updated!");
             
@@ -119,7 +119,7 @@ const RecruiterProfile = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.put('http://localhost:5000/api/recruiters/me/personal', 
+            await axios.put('/api/recruiters/me/personal', 
                 personalInfo, 
                 { headers: { 'x-auth-token': token } }
             );
@@ -138,7 +138,7 @@ const RecruiterProfile = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.put('http://localhost:5000/api/recruiters/me/organization', 
+            await axios.put('/api/recruiters/me/organization', 
                 orgInfo, 
                 { headers: { 'x-auth-token': token } }
             );

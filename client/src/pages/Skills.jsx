@@ -60,7 +60,7 @@ const Skills = () => {
 
   const fetchSkills = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/candidate/skills', {
+      const res = await fetch('/api/candidate/skills', {
         headers: { 'x-auth-token': localStorage.getItem('token') }
       });
       if (!res.ok) throw new Error('Failed to fetch skills');
@@ -78,7 +78,7 @@ const Skills = () => {
   const handleAddSkill = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/candidate/skills', {
+      const res = await fetch('/api/candidate/skills', {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify(newSkill)
@@ -100,7 +100,7 @@ const Skills = () => {
   const handleDeleteSkill = async (id) => {
     if (!window.confirm('Are you sure you want to delete this skill?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/candidate/skills/${id}`, {
+      const res = await fetch(`/api/candidate/skills/${id}`, {
         method: 'DELETE',
         headers: getAuthHeader()
       });
@@ -129,7 +129,7 @@ const Skills = () => {
   const handleUpdateSkill = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:5000/api/candidate/skills/${editingSkill._id}`, {
+      const res = await fetch(`/api/candidate/skills/${editingSkill._id}`, {
         method: 'PUT',
         headers: getAuthHeader(),
         body: JSON.stringify(editForm)
@@ -164,7 +164,7 @@ const Skills = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/candidate/skills/${activeSkillId}/proof`, {
+      const res = await fetch(`/api/candidate/skills/${activeSkillId}/proof`, {
         method: 'POST',
         headers: { 'x-auth-token': localStorage.getItem('token') },
         body: formData
@@ -188,7 +188,7 @@ const Skills = () => {
     if (!window.confirm('Remove this proof?')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/candidate/skills/${skillId}/proof/${proofId}`, {
+      const res = await fetch(`/api/candidate/skills/${skillId}/proof/${proofId}`, {
         method: 'DELETE',
         headers: getAuthHeader()
       });

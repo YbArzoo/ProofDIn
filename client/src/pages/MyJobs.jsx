@@ -19,7 +19,7 @@ const MyJobs = () => {
     const fetchMyJobs = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/jobs/myjobs', {
+            const res = await axios.get('/api/jobs/myjobs', {
                 headers: { 'x-auth-token': token }
             });
             setJobs(res.data);
@@ -35,7 +35,7 @@ const MyJobs = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/jobs/${jobId}`, {
+            await axios.delete(`/api/jobs/${jobId}`, {
                 headers: { 'x-auth-token': token }
             });
             setJobs(jobs.filter(j => j._id !== jobId)); // Remove from UI

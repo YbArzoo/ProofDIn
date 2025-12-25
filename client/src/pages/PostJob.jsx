@@ -47,7 +47,7 @@ const PostJob = () => {
     const loadJobData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(`http://localhost:5000/api/jobs/${jobId}`, {
+            const res = await axios.get(`/api/jobs/${jobId}`, {
                 headers: { 'x-auth-token': token }
             });
             const job = res.data;
@@ -87,7 +87,7 @@ const PostJob = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:5000/api/jobs/parse-jd', 
+            const res = await axios.post('/api/jobs/parse-jd', 
                 { description: formData.jobDescription },
                 { 
                     headers: { 'x-auth-token': token },
@@ -196,8 +196,8 @@ const PostJob = () => {
         try {
             const token = localStorage.getItem('token');
             const url = isEditMode 
-                ? `http://localhost:5000/api/jobs/${jobId}`
-                : `http://localhost:5000/api/jobs/analyze`; // Calls the create endpoint
+                ? `/api/jobs/${jobId}`
+                : `/api/jobs/analyze`; // Calls the create endpoint
             
             const method = isEditMode ? 'put' : 'post';
 

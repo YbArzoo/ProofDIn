@@ -22,7 +22,7 @@ const Shortlist = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/shortlist', {
+            const res = await axios.get('/api/shortlist', {
                 headers: { 'x-auth-token': token }
             });
             setItems(res.data);
@@ -37,7 +37,7 @@ const Shortlist = () => {
             const token = localStorage.getItem('token');
             setItems(prev => prev.map(item => item._id === id ? { ...item, status: newStatus } : item));
             
-            await axios.put(`http://localhost:5000/api/shortlist/${id}`, 
+            await axios.put(`/api/shortlist/${id}`, 
                 { status: newStatus },
                 { headers: { 'x-auth-token': token } }
             );
@@ -52,7 +52,7 @@ const Shortlist = () => {
         try {
             const token = localStorage.getItem('token');
             setItems(prev => prev.filter(item => item._id !== id)); 
-            await axios.delete(`http://localhost:5000/api/shortlist/${id}`, {
+            await axios.delete(`/api/shortlist/${id}`, {
                 headers: { 'x-auth-token': token }
             });
         } catch (err) {
@@ -67,7 +67,7 @@ const Shortlist = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:5000/api/shortlist/contact',
+            const res = await axios.post('/api/shortlist/contact',
                 { 
                     candidateId, 
                     message, 
@@ -103,7 +103,7 @@ const Shortlist = () => {
             setItems(prev => prev.map(item => item._id === id ? { ...item, customLabel: editValue } : item));
             setEditingId(null);
 
-            await axios.put(`http://localhost:5000/api/shortlist/${id}`, 
+            await axios.put(`/api/shortlist/${id}`, 
                 { customLabel: editValue },
                 { headers: { 'x-auth-token': token } }
             );

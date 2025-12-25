@@ -15,7 +15,7 @@ const CandidateOffers = () => {
     const fetchOffers = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/shortlist/my-offers', {
+            const res = await axios.get('/api/shortlist/my-offers', {
                 headers: { 'x-auth-token': token }
             });
             setOffers(res.data);
@@ -31,7 +31,7 @@ const CandidateOffers = () => {
         
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/shortlist/respond/${id}`, 
+            await axios.put(`/api/shortlist/respond/${id}`, 
                 { status: newStatus },
                 { headers: { 'x-auth-token': token } }
             );

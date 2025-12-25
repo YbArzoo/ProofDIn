@@ -19,11 +19,11 @@ const JobApplicants = () => {
             try {
                 const token = localStorage.getItem('token');
                 // Get Job Title
-                const jobRes = await axios.get(`http://localhost:5000/api/jobs/${id}`, { headers: { 'x-auth-token': token } });
+                const jobRes = await axios.get(`/api/jobs/${id}`, { headers: { 'x-auth-token': token } });
                 setJobTitle(jobRes.data.title);
 
                 // Get Applicants
-                const res = await axios.get(`http://localhost:5000/api/jobs/${id}/applicants`, { headers: { 'x-auth-token': token } });
+                const res = await axios.get(`/api/jobs/${id}/applicants`, { headers: { 'x-auth-token': token } });
                 
                 // Add an 'isShortlisted' flag (optional, if you want to check backend status later)
                 // For now, we default to false unless we fetch that status separately
@@ -41,7 +41,7 @@ const JobApplicants = () => {
     const handleShortlist = async (candidateId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/shortlist/add', 
+            await axios.post('/api/shortlist/add', 
                 { 
                     candidateId: candidateId, 
                     jobId: id, // The current job ID

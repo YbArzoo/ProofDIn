@@ -21,7 +21,7 @@ const JobPortal = () => {
 
     const fetchJobs = async () => {
         try {
-            const res = await axios.get('/api/jobs')
+            const res = await axios.get('http://localhost:5000/api/jobs');
             setJobs(res.data);
             setFilteredJobs(res.data);
         } catch (err) {

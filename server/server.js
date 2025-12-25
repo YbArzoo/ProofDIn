@@ -91,3 +91,15 @@ app.get('/', (req, res) => {
 // 7. START SERVER
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+// ... existing code ...
+
+// Keep your app.listen for local development
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+// REQUIRED FOR VERCEL
+module.exports = app;

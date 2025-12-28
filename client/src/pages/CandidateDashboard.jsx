@@ -200,7 +200,7 @@ const CandidateDashboard = () => {
                         <div className="job-input">
                             <textarea
                                 value={jdText} onChange={(e) => setJdText(e.target.value)}
-                                placeholder="Paste the job description here..."
+                                placeholder="Paste a resume prompt here..."
                                 style={{ minHeight: '150px', width: '100%', padding: '1rem', marginBottom: '1rem' }}
                             />
                             <button

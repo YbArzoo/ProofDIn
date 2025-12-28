@@ -162,12 +162,12 @@ const TailoredResume = () => {
                     <div className="section-header">
                         <h2><i className="fas fa-magic" style={{color:'var(--primary)', marginRight:'10px'}}></i>Create New Resume</h2>
                     </div>
-                    <p className="section-subtitle">Paste a job description below to generate a resume tailored specifically for that role.</p>
+                    <p className="section-subtitle">Paste a resume prompt below to generate a resume tailored specifically for that role.</p>
                     
                     <div className="resume-tailor-input">
                         <textarea 
                             className="custom-textarea" 
-                            placeholder="Paste Job Description here..."
+                            placeholder="Paste your resume prompt here..."
                             value={jdText}
                             onChange={(e) => setJdText(e.target.value)}
                             style={{minHeight: '150px', width: '100%', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px'}}

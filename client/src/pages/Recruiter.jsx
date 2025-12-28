@@ -174,7 +174,7 @@ const Recruiter = () => {
                 </div>
             </section>
 
-            {/* SEARCH BAR */}
+            {/* SEARCH BAR
             <section className="search-section">
                 <h2>Search Candidates</h2>
                 <div className="search-container">
@@ -189,7 +189,7 @@ const Recruiter = () => {
                     </div>
                     <button className="btn btn-primary" onClick={() => performSearch()}>Search</button>
                 </div>
-            </section>
+            </section> */}
 
             {/* RESULTS GRID */}
             <section>
